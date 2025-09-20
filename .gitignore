@@ -8,5 +8,5 @@
 /var/
 /vendor/
 .env
-.env.local
+.env.dev
 ###< symfony/framework-bundle ###
