@@ -1,0 +1,135 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vehicles - MyPOS{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{{ path('app_vehicles') }}">
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Type</label>
+                            <select name="type" id="type" class="form-select">
+                                <option value="">All Types</option>
+                                <option value="motorcycle" {{ currentFilters.type == 'motorcycle' ? 'selected' : '' }}>Motorcycle</option>
+                                <option value="car" {{ currentFilters.type == 'car' ? 'selected' : '' }}>Car</option>
+                                <option value="truck" {{ currentFilters.type == 'truck' ? 'selected' : '' }}>Truck</option>
+                                <option value="trailer" {{ currentFilters.type == 'trailer' ? 'selected' : '' }}>Trailer</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="brand" class="form-label">Brand</label>
+                            <select name="brand" id="brand" class="form-select">
+                                <option value="">All Brands</option>
+                                {% for brand in filterOptions.brands %}
+                                    <option value="{{ brand }}" {{ currentFilters.brand == brand ? 'selected' : '' }}>{{ brand }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="model" class="form-label">Model</label>
+                            <input type="text" name="model" id="model" class="form-control" value="{{ currentFilters.model }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="colour" class="form-label">Colour</label>
+                            <select name="colour" id="colour" class="form-select">
+                                <option value="">All Colours</option>
+                                {% for colour in filterOptions.colours %}
+                                    <option value="{{ colour }}" {{ currentFilters.colour == colour ? 'selected' : '' }}>{{ colour }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="price_min" class="form-label">Min Price</label>
+                            <input type="number" name="price_min" id="price_min" class="form-control" value="{{ currentFilters.priceMin }}" step="0.01">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="price_max" class="form-label">Max Price</label>
+                            <input type="number" name="price_max" id="price_max" class="form-control" value="{{ currentFilters.priceMax }}" step="0.01">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                            <a href="{{ path('app_vehicles') }}" class="btn btn-outline-secondary">Clear Filters</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Vehicles ({{ vehicleList.total }} found)</h2>
+                {% if app.user and app.user.isMerchant %}
+                    <a href="{{ path('app_vehicle_new') }}" class="btn btn-success">Add Vehicle</a>
+                {% endif %}
+            </div>
+
+            {% if vehicleList.vehicles %}
+                <div class="row">
+                    {% for vehicle in vehicleList.vehicles %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ vehicle.displayName }}</h5>
+                                    <p class="card-text">
+                                        <strong>Type:</strong> {{ vehicle.type|title }}<br>
+                                        <strong>Brand:</strong> {{ vehicle.brand }}<br>
+                                        <strong>Model:</strong> {{ vehicle.model }}<br>
+                                        <strong>Colour:</strong> {{ vehicle.colour }}<br>
+                                        <strong>Price:</strong> ${{ vehicle.price }}<br>
+                                        <strong>Quantity:</strong> {{ vehicle.quantity }}
+                                    </p>
+                                </div>
+                                <div class="card-footer">
+                                    <a href="{{ path('app_vehicle_show', {id: vehicle.id}) }}" class="btn btn-primary">View Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Pagination -->
+                {% if vehicleList.totalPages > 1 %}
+                    <nav aria-label="Vehicle pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if vehicleList.hasPreviousPage %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ path('app_vehicles', {page: vehicleList.getPreviousPage}) }}">Previous</a>
+                                </li>
+                            {% endif %}
+
+                            {% for page in 1..vehicleList.totalPages %}
+                                <li class="page-item {{ page == vehicleList.page ? 'active' : '' }}">
+                                    <a class="page-link" href="{{ path('app_vehicles', {page: page}) }}">{{ page }}</a>
+                                </li>
+                            {% endfor %}
+
+                            {% if vehicleList.hasNextPage %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ path('app_vehicles', {page: vehicleList.getNextPage}) }}">Next</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    <h4>No vehicles found</h4>
+                    <p>Try adjusting your filters or check back later for new listings.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

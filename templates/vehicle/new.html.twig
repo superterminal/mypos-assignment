@@ -1,0 +1,150 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Add Vehicle - MyPOS{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Add New Vehicle</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div class="mb-3">
+                            <label for="type" class="form-label">Vehicle Type</label>
+                            <select name="type" id="type" class="form-select" required onchange="toggleSpecificFields()">
+                                <option value="">Select Type</option>
+                                <option value="motorcycle">Motorcycle</option>
+                                <option value="car">Car</option>
+                                <option value="truck">Truck</option>
+                                <option value="trailer">Trailer</option>
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="brand" class="form-label">Brand</label>
+                                    <input type="text" name="brand" id="brand" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="model" class="form-label">Model</label>
+                                    <input type="text" name="model" id="model" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="engine_capacity" class="form-label">Engine Capacity (L)</label>
+                                    <input type="number" name="engine_capacity" id="engine_capacity" class="form-control" step="0.1" min="0">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="colour" class="form-label">Colour</label>
+                                    <input type="text" name="colour" id="colour" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="price" class="form-label">Price ($)</label>
+                                    <input type="number" name="price" id="price" class="form-control" step="0.01" min="0" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="quantity" class="form-label">Quantity</label>
+                                    <input type="number" name="quantity" id="quantity" class="form-control" min="0" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Car specific fields -->
+                        <div id="car-fields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="doors" class="form-label">Doors</label>
+                                        <select name="doors" id="doors" class="form-select">
+                                            <option value="2">2</option>
+                                            <option value="3">3</option>
+                                            <option value="4">4</option>
+                                            <option value="5">5</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="category" class="form-label">Category</label>
+                                        <input type="text" name="category" id="category" class="form-control" placeholder="e.g., Sedan, SUV, Hatchback">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Truck specific fields -->
+                        <div id="truck-fields" style="display: none;">
+                            <div class="mb-3">
+                                <label for="beds" class="form-label">Beds</label>
+                                <input type="number" name="beds" id="beds" class="form-control" min="1">
+                            </div>
+                        </div>
+
+                        <!-- Trailer specific fields -->
+                        <div id="trailer-fields" style="display: none;">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="load_capacity_kg" class="form-label">Load Capacity (kg)</label>
+                                        <input type="number" name="load_capacity_kg" id="load_capacity_kg" class="form-control" step="0.1" min="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="axles" class="form-label">Axles</label>
+                                        <input type="number" name="axles" id="axles" class="form-control" min="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ path('app_merchant_vehicles') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Add Vehicle</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleSpecificFields() {
+    const type = document.getElementById('type').value;
+    
+    // Hide all specific fields
+    document.getElementById('car-fields').style.display = 'none';
+    document.getElementById('truck-fields').style.display = 'none';
+    document.getElementById('trailer-fields').style.display = 'none';
+    
+    // Show relevant fields
+    if (type === 'car') {
+        document.getElementById('car-fields').style.display = 'block';
+    } else if (type === 'truck') {
+        document.getElementById('truck-fields').style.display = 'block';
+    } else if (type === 'trailer') {
+        document.getElementById('trailer-fields').style.display = 'block';
+    }
+}
+</script>
+{% endblock %}

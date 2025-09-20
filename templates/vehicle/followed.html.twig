@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Followed Vehicles - MyPOS{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h2>My Followed Vehicles</h2>
+
+    {% if vehicles %}
+        <div class="row">
+            {% for vehicle in vehicles %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ vehicle.displayName }}</h5>
+                            <p class="card-text">
+                                <strong>Type:</strong> {{ vehicle.type|title }}<br>
+                                <strong>Brand:</strong> {{ vehicle.brand }}<br>
+                                <strong>Model:</strong> {{ vehicle.model }}<br>
+                                <strong>Colour:</strong> {{ vehicle.colour }}<br>
+                                <strong>Price:</strong> ${{ vehicle.price }}<br>
+                                <strong>Quantity:</strong> {{ vehicle.quantity }}<br>
+                                <strong>Merchant:</strong> {{ vehicle.merchant.fullName }}
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            <div class="btn-group w-100" role="group">
+                                <a href="{{ path('app_vehicle_show', {id: vehicle.id}) }}" class="btn btn-primary">View Details</a>
+                                <form method="post" action="{{ path('app_vehicle_unfollow', {id: vehicle.id}) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-warning">Unfollow</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <h4>No followed vehicles</h4>
+            <p>Start following vehicles you're interested in to see them here.</p>
+            <a href="{{ path('app_vehicles') }}" class="btn btn-primary">Browse Vehicles</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

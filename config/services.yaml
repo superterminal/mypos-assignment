@@ -18,3 +18,11 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    # Make services public for testing
+    App\Service\VehicleService:
+        public: true
+    App\Service\UserService:
+        public: true
+    App\Service\EmailService:
+        public: true

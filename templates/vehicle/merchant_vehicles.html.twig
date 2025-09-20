@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}My Vehicles - MyPOS{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>My Vehicles</h2>
+        <a href="{{ path('app_vehicle_new') }}" class="btn btn-success">Add New Vehicle</a>
+    </div>
+
+    {% if vehicles %}
+        <div class="row">
+            {% for vehicle in vehicles %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ vehicle.displayName }}</h5>
+                            <p class="card-text">
+                                <strong>Type:</strong> {{ vehicle.type|title }}<br>
+                                <strong>Brand:</strong> {{ vehicle.brand }}<br>
+                                <strong>Model:</strong> {{ vehicle.model }}<br>
+                                <strong>Colour:</strong> {{ vehicle.colour }}<br>
+                                <strong>Price:</strong> ${{ vehicle.price }}<br>
+                                <strong>Quantity:</strong> {{ vehicle.quantity }}<br>
+                                <strong>Followers:</strong> {{ vehicle.followers|length }}
+                            </p>
+                        </div>
+                        <div class="card-footer">
+                            <div class="btn-group w-100" role="group">
+                                <a href="{{ path('app_vehicle_show', {id: vehicle.id}) }}" class="btn btn-outline-primary">View</a>
+                                <a href="{{ path('app_vehicle_edit', {id: vehicle.id}) }}" class="btn btn-outline-secondary">Edit</a>
+                                <form method="post" action="{{ path('app_vehicle_delete', {id: vehicle.id}) }}" onsubmit="return confirm('Are you sure?')" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <h4>No vehicles yet</h4>
+            <p>Start by adding your first vehicle to begin selling.</p>
+            <a href="{{ path('app_vehicle_new') }}" class="btn btn-primary">Add Your First Vehicle</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
