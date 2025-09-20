@@ -192,4 +192,16 @@ class VehicleService
             $vehicle->setAxles($data['axles']);
         }
     }
+
+    public function getFollowedVehicleIds(User $user): array
+    {
+        $followedVehicles = $user->getFollowedVehicles();
+        $vehicleIds = [];
+        
+        foreach ($followedVehicles as $vehicle) {
+            $vehicleIds[] = $vehicle->getId();
+        }
+        
+        return $vehicleIds;
+    }
 }

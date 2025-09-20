@@ -1,46 +1,249 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Home - MyPOS Application{% endblock %}
+{% block title %}myPOS Car Market! - Your Ultimate Vehicle Marketplace{% endblock %}
+
+{% block stylesheets %}
+<style>
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 80px 0;
+    margin-bottom: 60px;
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.how-it-works {
+    background-color: #f8f9fa;
+    padding: 60px 0;
+}
+
+.stats-section {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 60px 0;
+}
+
+.cta-section {
+    background-color: #343a40;
+    color: white;
+    padding: 60px 0;
+}
+</style>
+{% endblock %}
 
 {% block body %}
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="jumbotron">
-                <h1 class="display-4">Welcome to MyPOS</h1>
-                <p class="lead">{{ message }}</p>
-                <hr class="my-4">
-                <p>This is a Symfony application with Twig templates and Doctrine ORM.</p>
-                <a class="btn btn-primary btn-lg" href="#" role="button">Get Started</a>
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">myPOS Car Market!</h1>
+                <p class="lead mb-4">The ultimate vehicle marketplace connecting buyers and sellers. Find your dream vehicle or sell your inventory with ease.</p>
+                <div class="d-flex gap-3">
+                    {% if app.user %}
+                        <a href="{{ path('app_vehicles') }}" class="btn btn-light btn-lg">
+                            <i class="bi bi-search"></i> Browse Vehicles
+                        </a>
+                        {% if app.user.isMerchant %}
+                            <a href="{{ path('app_merchant_vehicles') }}" class="btn btn-outline-light btn-lg">
+                                <i class="bi bi-truck"></i> My Vehicles
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ path('app_register') }}" class="btn btn-light btn-lg">
+                            <i class="bi bi-person-plus"></i> Get Started
+                        </a>
+                        <a href="{{ path('app_vehicles') }}" class="btn btn-outline-light btn-lg">
+                            <i class="bi bi-eye"></i> Browse Vehicles
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="bi bi-car-front feature-icon"></i>
+                <h3>Your Vehicle Journey Starts Here</h3>
             </div>
         </div>
     </div>
+</div>
+
+<!-- Features Section -->
+<div class="container mb-5">
+    <div class="row text-center mb-5">
+        <div class="col-12">
+            <h2 class="display-5 fw-bold">Why Choose myPOS Car Market!</h2>
+            <p class="lead text-muted">Built with modern technology and user-focused design</p>
+        </div>
+    </div>
     
-    <div class="row">
+    <div class="row g-4">
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Features</h5>
-                    <p class="card-text">Built with Symfony {{ constant('Symfony\\Component\\HttpKernel\\Kernel::VERSION') }}</p>
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-shield-check feature-icon text-primary"></i>
+                    <h5 class="card-title">Secure & Reliable</h5>
+                    <p class="card-text">Built with Symfony framework, ensuring enterprise-grade security and performance for all your vehicle transactions.</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Templates</h5>
-                    <p class="card-text">Using Twig template engine for rendering</p>
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-search feature-icon text-success"></i>
+                    <h5 class="card-title">Advanced Search</h5>
+                    <p class="card-text">Filter vehicles by type, brand, model, color, and price range. Find exactly what you're looking for in seconds.</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Database</h5>
-                    <p class="card-text">Doctrine ORM for database operations</p>
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <i class="bi bi-heart feature-icon text-danger"></i>
+                    <h5 class="card-title">Follow & Save</h5>
+                    <p class="card-text">Save vehicles you're interested in and get updates. Never miss out on your dream vehicle again.</p>
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- How It Works Section -->
+<div class="how-it-works">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-5 fw-bold">How It Works</h2>
+                <p class="lead text-muted">Simple steps to buy or sell vehicles</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <span class="fs-2 fw-bold">1</span>
+                    </div>
+                    <h5>Create Account</h5>
+                    <p class="text-muted">Sign up as a Buyer to browse and follow vehicles, or as a Merchant to list your inventory.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <span class="fs-2 fw-bold">2</span>
+                    </div>
+                    <h5>Browse or List</h5>
+                    <p class="text-muted">Buyers can search and filter vehicles, while Merchants can add, edit, and manage their vehicle listings.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <span class="fs-2 fw-bold">3</span>
+                    </div>
+                    <h5>Connect & Transact</h5>
+                    <p class="text-muted">Follow vehicles you're interested in, track your favorites, and connect with sellers for transactions.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vehicle Types Section -->
+<div class="container my-5">
+    <div class="row text-center mb-5">
+        <div class="col-12">
+            <h2 class="display-5 fw-bold">Vehicle Types We Support</h2>
+            <p class="lead text-muted">From motorcycles to trailers, we've got you covered</p>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <i class="bi bi-bicycle feature-icon text-primary"></i>
+                    <h6 class="card-title">Motorcycles</h6>
+                    <p class="card-text small">Brand, model, engine capacity, color, price, quantity</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <i class="bi bi-car-front feature-icon text-success"></i>
+                    <h6 class="card-title">Cars</h6>
+                    <p class="card-text small">Brand, model, engine capacity, color, doors, category, price, quantity</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <i class="bi bi-truck feature-icon text-warning"></i>
+                    <h6 class="card-title">Trucks</h6>
+                    <p class="card-text small">Brand, model, engine capacity, color, beds, price, quantity</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body p-4">
+                    <i class="bi bi-box feature-icon text-info"></i>
+                    <h6 class="card-title">Trailers</h6>
+                    <p class="card-text small">Brand, model, load capacity, axles, price, quantity</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="stats-section">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <h3 class="display-4 fw-bold">100+</h3>
+                <p class="lead">Vehicles Listed</p>
+            </div>
+            <div class="col-md-4">
+                <h3 class="display-4 fw-bold">50+</h3>
+                <p class="lead">Active Merchants</p>
+            </div>
+            <div class="col-md-4">
+                <h3 class="display-4 fw-bold">200+</h3>
+                <p class="lead">Happy Buyers</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Call to Action Section -->
+<div class="cta-section">
+    <div class="container text-center">
+        <h2 class="display-5 fw-bold mb-4">Ready to Get Started?</h2>
+        <p class="lead mb-4">Join thousands of users who trust myPOS Car Market! for their vehicle needs.</p>
+        {% if not app.user %}
+            <a href="{{ path('app_register') }}" class="btn btn-primary btn-lg me-3">
+                <i class="bi bi-person-plus"></i> Create Account
+            </a>
+            <a href="{{ path('app_login') }}" class="btn btn-outline-light btn-lg">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+        {% else %}
+            <a href="{{ path('app_vehicles') }}" class="btn btn-primary btn-lg me-3">
+                <i class="bi bi-search"></i> Browse Vehicles
+            </a>
+            {% if app.user.isMerchant %}
+                <a href="{{ path('app_merchant_vehicles') }}" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-plus-circle"></i> Add Vehicle
+                </a>
+            {% endif %}
+        {% endif %}
     </div>
 </div>
 {% endblock %}

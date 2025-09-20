@@ -37,10 +37,17 @@ class VehicleController extends AbstractController
         $vehicleList = $this->vehicleService->getVehicles($filterDTO);
         $filterOptions = $this->vehicleService->getFilterOptions();
 
+        // Check which vehicles are followed by the current user
+        $followedVehicleIds = [];
+        if ($this->getUser() && $this->getUser()->isBuyer()) {
+            $followedVehicleIds = $this->vehicleService->getFollowedVehicleIds($this->getUser());
+        }
+
         return $this->render('vehicle/index.html.twig', [
             'vehicleList' => $vehicleList,
             'filterOptions' => $filterOptions,
             'currentFilters' => $filterDTO,
+            'followedVehicleIds' => $followedVehicleIds,
         ]);
     }
 
@@ -66,7 +73,7 @@ class VehicleController extends AbstractController
 
     #[Route('/vehicle/{id}/follow', name: 'app_vehicle_follow', requirements: ['id' => '\d+'], methods: ['POST'])]
     #[IsGranted('ROLE_BUYER')]
-    public function follow(int $id): Response
+    public function follow(int $id, Request $request): Response
     {
         $vehicle = $this->vehicleService->getVehicleById($id);
         

@@ -87,12 +87,26 @@
                                         <strong>Brand:</strong> {{ vehicle.brand }}<br>
                                         <strong>Model:</strong> {{ vehicle.model }}<br>
                                         <strong>Colour:</strong> {{ vehicle.colour }}<br>
-                                        <strong>Price:</strong> ${{ vehicle.price }}<br>
+                                        <strong>Price:</strong> ${{ vehicle.price|number_format(2, '.', ',') }}<br>
                                         <strong>Quantity:</strong> {{ vehicle.quantity }}
                                     </p>
                                 </div>
-                                <div class="card-footer">
+                                <div class="card-footer d-flex justify-content-between align-items-center">
                                     <a href="{{ path('app_vehicle_show', {id: vehicle.id}) }}" class="btn btn-primary">View Details</a>
+                                    {% if app.user and app.user.isBuyer %}
+                                        {% if vehicle.id in followedVehicleIds %}
+                                            <button type="button" class="btn btn-success" disabled>
+                                                <i class="bi bi-check-circle"></i> Followed
+                                            </button>
+                                        {% else %}
+                                            <form method="post" action="{{ path('app_vehicle_follow', {id: vehicle.id}) }}" style="display: inline;">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('follow_vehicle_' ~ vehicle.id) }}">
+                                                <button type="submit" class="btn btn-secondary">
+                                                    <i class="bi bi-plus-circle"></i> Follow
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

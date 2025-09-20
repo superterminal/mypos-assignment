@@ -21,7 +21,7 @@
                                 <strong>Brand:</strong> {{ vehicle.brand }}<br>
                                 <strong>Model:</strong> {{ vehicle.model }}<br>
                                 <strong>Colour:</strong> {{ vehicle.colour }}<br>
-                                <strong>Price:</strong> ${{ vehicle.price }}<br>
+                                <strong>Price:</strong> ${{ vehicle.price|number_format(2, '.', ',') }}<br>
                                 <strong>Quantity:</strong> {{ vehicle.quantity }}<br>
                                 <strong>Followers:</strong> {{ vehicle.followers|length }}
                             </p>

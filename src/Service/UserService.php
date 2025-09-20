@@ -32,6 +32,11 @@ class UserService
         $role = $dto->role === 'merchant' ? User::ROLE_MERCHANT : User::ROLE_BUYER;
         $user->setRoles([$role]);
 
+        // Ensure createdAt is set (should be set in constructor, but let's be explicit)
+        if (!$user->getCreatedAt()) {
+            $user->setCreatedAt(new \DateTime());
+        }
+
         $this->userRepository->save($user, true);
 
         return $user;
