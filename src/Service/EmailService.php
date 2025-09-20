@@ -12,7 +12,7 @@ class EmailService
     public function __construct(
         private MailerInterface $mailer,
         private Environment $twig,
-        private string $fromEmail = 'noreply@mypos.com'
+        private string $fromEmail = 'hello@demomailtrap.co'
     ) {
     }
 
@@ -21,7 +21,7 @@ class EmailService
         $email = (new Email())
             ->from($this->fromEmail)
             ->to($user->getEmail())
-            ->subject('Password Reset Request')
+            ->subject('Password Reset Request from MyPOS Car Market!')
             ->html($this->twig->render('emails/password_reset.html.twig', [
                 'user' => $user,
                 'token' => $token,
@@ -35,7 +35,7 @@ class EmailService
         $email = (new Email())
             ->from($this->fromEmail)
             ->to($user->getEmail())
-            ->subject('Welcome to MyPOS!')
+            ->subject('Welcome to MyPOS Car Market!')
             ->html($this->twig->render('emails/welcome.html.twig', [
                 'user' => $user,
             ]));
