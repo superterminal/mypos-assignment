@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to MyPOS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #28a745;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+        }
+        .content {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 0 0 5px 5px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #28a745;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background-color: #1e7e34;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #666;
+        }
+        .features {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .feature {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 3px solid #28a745;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome to MyPOS!</h1>
+        <h2>Your Vehicle Marketplace Account is Ready</h2>
+    </div>
+    
+    <div class="content">
+        <p>Hello {{ user.firstName }},</p>
+        
+        <p>Welcome to MyPOS! We're excited to have you join our vehicle marketplace community.</p>
+        
+        <div class="features">
+            <h3>What you can do on MyPOS:</h3>
+            
+            {% if user.isMerchant %}
+                <div class="feature">
+                    <strong>🚗 Manage Your Inventory</strong><br>
+                    Add, edit, and delete vehicles from your inventory
+                </div>
+                <div class="feature">
+                    <strong>📊 Track Interest</strong><br>
+                    See how many buyers are following your vehicles
+                </div>
+                <div class="feature">
+                    <strong>💰 Set Competitive Prices</strong><br>
+                    Price your vehicles to attract buyers
+                </div>
+            {% else %}
+                <div class="feature">
+                    <strong>🔍 Browse Vehicles</strong><br>
+                    Search and filter through thousands of vehicles
+                </div>
+                <div class="feature">
+                    <strong>❤️ Follow Vehicles</strong><br>
+                    Save vehicles you're interested in for later
+                </div>
+                <div class="feature">
+                    <strong>📱 Stay Updated</strong><br>
+                    Get notified about vehicles you're following
+                </div>
+            {% endif %}
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="{{ url('app_home') }}" class="button">Get Started</a>
+        </div>
+        
+        <p><strong>Need Help?</strong></p>
+        <p>If you have any questions or need assistance, don't hesitate to contact our support team. We're here to help you make the most of your MyPOS experience.</p>
+        
+        <p>Happy {{ user.isMerchant ? 'selling' : 'shopping' }}!<br>The MyPOS Team</p>
+    </div>
+    
+    <div class="footer">
+        <p>This email was sent from MyPOS Vehicle Marketplace</p>
+        <p>Please do not reply to this email</p>
+    </div>
+</body>
+</html>

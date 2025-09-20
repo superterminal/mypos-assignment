@@ -36,8 +36,7 @@ abstract class Vehicle
     #[Assert\Length(min: 2, max: 255)]
     private ?string $model = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
-    #[Assert\NotBlank]
+    #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2, nullable: true)]
     #[Assert\Positive]
     private ?string $engineCapacity = null;
 
@@ -66,7 +65,8 @@ abstract class Vehicle
     #[ORM\JoinColumn(nullable: false)]
     private ?User $merchant = null;
 
-    #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'followedVehicles')]
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'followedVehicles')]
+    #[ORM\JoinTable(name: 'vehicle_followers')]
     private Collection $followers;
 
     public function __construct()
