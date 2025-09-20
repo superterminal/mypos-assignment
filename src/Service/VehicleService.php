@@ -107,6 +107,7 @@ class VehicleService
     public function getFilterOptions(): array
     {
         return [
+            'types' => ['car', 'motorcycle', 'truck', 'trailer'],
             'brands' => $this->vehicleRepository->findDistinctBrands(),
             'colours' => $this->vehicleRepository->findDistinctColours(),
             'models' => $this->vehicleRepository->findDistinctModels(),

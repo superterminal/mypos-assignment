@@ -33,3 +33,8 @@ services:
         public: true
         arguments:
             $projectDir: '%kernel.project_dir%'
+    
+    # Make security services public for testing
+    Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface:
+        alias: security.user_password_hasher
+        public: true
