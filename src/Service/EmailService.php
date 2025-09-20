@@ -12,7 +12,7 @@ class EmailService
     public function __construct(
         private MailerInterface $mailer,
         private Environment $twig,
-        private string $fromEmail = 'hello@demomailtrap.co'
+        private string $fromEmail = 'trendemil@gmail.com'
     ) {
     }
 

@@ -1,0 +1,179 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Page Not Found - myPOS Car Market!{% endblock %}
+
+{% block stylesheets %}
+<style>
+.error-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.error-content {
+    text-align: center;
+    max-width: 600px;
+    padding: 2rem;
+}
+
+.error-code {
+    font-size: 8rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.error-title {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.error-message {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+    line-height: 1.6;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-custom {
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.btn-primary-custom {
+    background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+    color: white;
+    border-color: #ff6b6b;
+}
+
+.btn-primary-custom:hover {
+    background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+    color: white;
+}
+
+.btn-secondary-custom {
+    background: transparent;
+    color: white;
+    border-color: white;
+}
+
+.btn-secondary-custom:hover {
+    background: white;
+    color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+}
+
+.error-illustration {
+    margin-bottom: 2rem;
+}
+
+.error-illustration svg {
+    width: 200px;
+    height: 200px;
+    opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .error-code {
+        font-size: 6rem;
+    }
+    
+    .error-title {
+        font-size: 2rem;
+    }
+    
+    .error-message {
+        font-size: 1rem;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-custom {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="error-page">
+    <div class="error-content">
+        <div class="error-illustration">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="carGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#4ecdc4;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                
+                <!-- Car body -->
+                <rect x="40" y="80" width="120" height="40" rx="8" fill="url(#carGradient)" opacity="0.8"/>
+                
+                <!-- Car roof -->
+                <rect x="60" y="60" width="80" height="30" rx="6" fill="url(#carGradient)" opacity="0.6"/>
+                
+                <!-- Wheels -->
+                <circle cx="60" cy="130" r="15" fill="#333" opacity="0.7"/>
+                <circle cx="140" cy="130" r="15" fill="#333" opacity="0.7"/>
+                
+                <!-- Windows -->
+                <rect x="70" y="70" width="20" height="15" rx="2" fill="white" opacity="0.3"/>
+                <rect x="110" y="70" width="20" height="15" rx="2" fill="white" opacity="0.3"/>
+                
+                <!-- Question mark -->
+                <text x="100" y="180" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">?</text>
+            </svg>
+        </div>
+        
+        <div class="error-code">404</div>
+        <h1 class="error-title">Oops! Page Not Found</h1>
+        <p class="error-message">
+            The page you're looking for seems to have taken a wrong turn. 
+            Don't worry, even the best cars sometimes get lost! 
+            Let's get you back on track to finding your perfect vehicle.
+        </p>
+        
+        <div class="error-actions">
+            <a href="{{ path('app_home') }}" class="btn-custom btn-primary-custom">
+                <i class="bi bi-house-door"></i> Go Home
+            </a>
+            <a href="{{ path('app_vehicles') }}" class="btn-custom btn-secondary-custom">
+                <i class="bi bi-car-front"></i> Browse Vehicles
+            </a>
+        </div>
+        
+        <div class="mt-4">
+            <small class="opacity-75">
+                If you believe this is an error, please contact our support team.
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}

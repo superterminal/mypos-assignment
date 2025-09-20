@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\DTO\UserRegistrationDTO;
+use App\Service\EmailService;
+use App\Service\LoggerService;
 use App\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -10,14 +12,14 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-use App\Service\EmailService;
 
 class AuthController extends AbstractController
 {
     public function __construct(
         private UserService $userService,
         private ValidatorInterface $validator,
-        private EmailService $emailService
+        private EmailService $emailService,
+        private LoggerService $logger
     ) {
     }
 
@@ -67,27 +69,18 @@ class AuthController extends AbstractController
                 try {
                     $user = $this->userService->register($dto);
                     $this->addFlash('success', 'Registration successful! You can now log in.');
-                    // $this->emailService->sendWelcomeEmail($user);
+                    $this->emailService->sendWelcomeEmail($user);
                     return $this->redirectToRoute('app_login');
                 } catch (\Exception $e) {
                     $this->addFlash('error', 'Registration failed: ' . $e->getMessage());
-                    // Log the full exception for debugging
-                    $logMessage = sprintf(
-                        '[%s] Registration error: %s in %s:%d\nStack trace:\n%s',
-                        date('Y-m-d H:i:s'),
-                        $e->getMessage(),
-                        $e->getFile(),
-                        $e->getLine(),
-                        $e->getTraceAsString()
-                    );
-                    error_log($logMessage);
                     
-                    // Also log to a custom file
-                    file_put_contents(
-                        $this->getParameter('kernel.project_dir') . '/var/log/registration_errors.log',
-                        $logMessage . "\n" . str_repeat('-', 80) . "\n",
-                        FILE_APPEND | LOCK_EX
-                    );
+                    // Log the exception using LoggerService
+                    $this->logger->logException($e, 'Registration failed');
+                    $this->logger->error('Registration attempt failed', [
+                        'email' => $dto->email,
+                        'role' => $dto->role,
+                        'error' => $e->getMessage()
+                    ]);
                 }
             } else {
                 foreach ($violations as $violation) {

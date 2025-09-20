@@ -26,3 +26,7 @@ services:
         public: true
     App\Service\EmailService:
         public: true
+    App\Service\LoggerService:
+        public: true
+        arguments:
+            $projectDir: '%kernel.project_dir%'

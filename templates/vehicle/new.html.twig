@@ -2,6 +2,48 @@
 
 {% block title %}Add Vehicle - MyPOS{% endblock %}
 
+{% block stylesheets %}
+<style>
+.autocomplete-container {
+    position: relative;
+}
+
+.autocomplete-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ced4da;
+    border-top: none;
+    border-radius: 0 0 0.375rem 0.375rem;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+.autocomplete-suggestion {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.autocomplete-suggestion:hover,
+.autocomplete-suggestion.active {
+    background-color: #f8f9fa;
+}
+
+.autocomplete-suggestion:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-suggestions.show {
+    display: block;
+}
+</style>
+{% endblock %}
+
 {% block body %}
 <div class="container">
     <div class="row justify-content-center">
@@ -27,13 +69,19 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="brand" class="form-label">Brand</label>
-                                    <input type="text" name="brand" id="brand" class="form-control" required>
+                                    <div class="autocomplete-container">
+                                        <input type="text" name="brand" id="brand" class="form-control" required autocomplete="off">
+                                        <div id="brand-suggestions" class="autocomplete-suggestions"></div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="model" class="form-label">Model</label>
-                                    <input type="text" name="model" id="model" class="form-control" required>
+                                    <div class="autocomplete-container">
+                                        <input type="text" name="model" id="model" class="form-control" required autocomplete="off">
+                                        <div id="model-suggestions" class="autocomplete-suggestions"></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -127,8 +175,111 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block javascripts %}
 <script>
+let carData = [];
+let selectedBrand = '';
+
+// Load car data when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadCarData();
+    setupAutocomplete();
+});
+
+async function loadCarData() {
+    try {
+        const response = await fetch('/api/car-data');
+        carData = await response.json();
+    } catch (error) {
+        console.error('Failed to load car data:', error);
+    }
+}
+
+function setupAutocomplete() {
+    const brandInput = document.getElementById('brand');
+    const modelInput = document.getElementById('model');
+    const brandSuggestions = document.getElementById('brand-suggestions');
+    const modelSuggestions = document.getElementById('model-suggestions');
+
+    // Brand autocomplete
+    brandInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        if (query.length < 1) {
+            hideSuggestions(brandSuggestions);
+            return;
+        }
+
+        const brands = carData.map(car => car.brand).filter(brand => 
+            brand.toLowerCase().includes(query)
+        );
+        
+        showSuggestions(brandSuggestions, brands, brandInput);
+    });
+
+    // Model autocomplete
+    modelInput.addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        if (query.length < 1 || !selectedBrand) {
+            hideSuggestions(modelSuggestions);
+            return;
+        }
+
+        const brandData = carData.find(car => car.brand === selectedBrand);
+        if (!brandData) return;
+
+        const models = brandData.models.filter(model => 
+            model.toLowerCase().includes(query)
+        );
+        
+        showSuggestions(modelSuggestions, models, modelInput);
+    });
+
+    // Brand selection
+    brandInput.addEventListener('blur', function() {
+        setTimeout(() => hideSuggestions(brandSuggestions), 200);
+    });
+
+    // Model selection
+    modelInput.addEventListener('blur', function() {
+        setTimeout(() => hideSuggestions(modelSuggestions), 200);
+    });
+}
+
+function showSuggestions(container, items, input) {
+    container.innerHTML = '';
+    
+    if (items.length === 0) {
+        hideSuggestions(container);
+        return;
+    }
+
+    items.slice(0, 10).forEach(item => {
+        const suggestion = document.createElement('div');
+        suggestion.className = 'autocomplete-suggestion';
+        suggestion.textContent = item;
+        
+        suggestion.addEventListener('click', function() {
+            input.value = item;
+            hideSuggestions(container);
+            
+            if (input.id === 'brand') {
+                selectedBrand = item;
+                document.getElementById('model').value = '';
+            }
+        });
+        
+        container.appendChild(suggestion);
+    });
+    
+    container.classList.add('show');
+}
+
+function hideSuggestions(container) {
+    container.classList.remove('show');
+}
+
 function toggleSpecificFields() {
     const type = document.getElementById('type').value;
     
