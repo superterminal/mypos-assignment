@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Home - MyPOS Application{% endblock %}
+
+{% block body %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="jumbotron">
+                <h1 class="display-4">Welcome to MyPOS</h1>
+                <p class="lead">{{ message }}</p>
+                <hr class="my-4">
+                <p>This is a Symfony application with Twig templates and Doctrine ORM.</p>
+                <a class="btn btn-primary btn-lg" href="#" role="button">Get Started</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Features</h5>
+                    <p class="card-text">Built with Symfony {{ constant('Symfony\\Component\\HttpKernel\\Kernel::VERSION') }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Templates</h5>
+                    <p class="card-text">Using Twig template engine for rendering</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Database</h5>
+                    <p class="card-text">Doctrine ORM for database operations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
