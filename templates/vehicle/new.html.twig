@@ -206,7 +206,10 @@ function setupAutocomplete() {
     // Brand autocomplete
     brandInput.addEventListener('input', function() {
         const query = this.value.toLowerCase();
-        if (query.length < 1) {
+        const vehicleType = document.getElementById('type').value;
+        
+        // Only show autocomplete for cars
+        if (vehicleType !== 'car' || query.length < 1) {
             hideSuggestions(brandSuggestions);
             return;
         }
@@ -221,7 +224,10 @@ function setupAutocomplete() {
     // Model autocomplete
     modelInput.addEventListener('input', function() {
         const query = this.value.toLowerCase();
-        if (query.length < 1 || !selectedBrand) {
+        const vehicleType = document.getElementById('type').value;
+        
+        // Only show autocomplete for cars
+        if (vehicleType !== 'car' || query.length < 1 || !selectedBrand) {
             hideSuggestions(modelSuggestions);
             return;
         }
@@ -287,6 +293,15 @@ function toggleSpecificFields() {
     document.getElementById('car-fields').style.display = 'none';
     document.getElementById('truck-fields').style.display = 'none';
     document.getElementById('trailer-fields').style.display = 'none';
+    
+    // Clear autocomplete suggestions when switching vehicle types
+    hideSuggestions(document.getElementById('brand-suggestions'));
+    hideSuggestions(document.getElementById('model-suggestions'));
+    
+    // Clear selected brand when switching away from cars
+    if (type !== 'car') {
+        selectedBrand = '';
+    }
     
     // Show relevant fields
     if (type === 'car') {
