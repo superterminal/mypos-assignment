@@ -56,57 +56,82 @@ class SeedDataCommand extends Command
     {
         $io->section('Creating Users');
 
-        // Create merchant
-        $merchant = new User();
-        $merchant->setEmail('merchant@test.com');
-        $merchant->setFirstName('John');
-        $merchant->setLastName('Dealer');
-        $merchant->setRoles([User::ROLE_MERCHANT]);
-        $merchant->setIsVerified(true);
-        
-        $hashedPassword = $this->passwordHasher->hashPassword($merchant, 'password123');
-        $merchant->setPassword($hashedPassword);
+        // Check if users already exist
+        $existingMerchant = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'merchant@test.com']);
+        if ($existingMerchant) {
+            $io->text('✓ Merchant already exists: merchant@test.com');
+        } else {
+            // Create merchant
+            $merchant = new User();
+            $merchant->setEmail('merchant@test.com');
+            $merchant->setFirstName('John');
+            $merchant->setLastName('Dealer');
+            $merchant->setRoles([User::ROLE_MERCHANT]);
+            $merchant->setIsVerified(true);
+            
+            $hashedPassword = $this->passwordHasher->hashPassword($merchant, 'password123');
+            $merchant->setPassword($hashedPassword);
 
-        $this->entityManager->persist($merchant);
-        $io->text('✓ Created merchant: merchant@test.com');
+            $this->entityManager->persist($merchant);
+            $io->text('✓ Created merchant: merchant@test.com');
+        }
 
-        // Create buyer
-        $buyer = new User();
-        $buyer->setEmail('buyer@test.com');
-        $buyer->setFirstName('Jane');
-        $buyer->setLastName('Customer');
-        $buyer->setRoles([User::ROLE_BUYER]);
-        $buyer->setIsVerified(true);
-        
-        $hashedPassword = $this->passwordHasher->hashPassword($buyer, 'password123');
-        $buyer->setPassword($hashedPassword);
+        // Check if buyer already exists
+        $existingBuyer = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'buyer@test.com']);
+        if ($existingBuyer) {
+            $io->text('✓ Buyer already exists: buyer@test.com');
+        } else {
+            // Create buyer
+            $buyer = new User();
+            $buyer->setEmail('buyer@test.com');
+            $buyer->setFirstName('Jane');
+            $buyer->setLastName('Customer');
+            $buyer->setRoles([User::ROLE_BUYER]);
+            $buyer->setIsVerified(true);
+            
+            $hashedPassword = $this->passwordHasher->hashPassword($buyer, 'password123');
+            $buyer->setPassword($hashedPassword);
 
-        $this->entityManager->persist($buyer);
-        $io->text('✓ Created buyer: buyer@test.com');
+            $this->entityManager->persist($buyer);
+            $io->text('✓ Created buyer: buyer@test.com');
+        }
 
-        // Create another merchant
-        $merchant2 = new User();
-        $merchant2->setEmail('dealer@autos.com');
-        $merchant2->setFirstName('Mike');
-        $merchant2->setLastName('Auto');
-        $merchant2->setRoles([User::ROLE_MERCHANT]);
-        $merchant2->setIsVerified(true);
-        
-        $hashedPassword = $this->passwordHasher->hashPassword($merchant2, 'password123');
-        $merchant2->setPassword($hashedPassword);
+        // Check if second merchant already exists
+        $existingMerchant2 = $this->entityManager->getRepository(User::class)->findOneBy(['email' => 'dealer@autos.com']);
+        if ($existingMerchant2) {
+            $io->text('✓ Merchant already exists: dealer@autos.com');
+        } else {
+            // Create another merchant
+            $merchant2 = new User();
+            $merchant2->setEmail('dealer@autos.com');
+            $merchant2->setFirstName('Mike');
+            $merchant2->setLastName('Auto');
+            $merchant2->setRoles([User::ROLE_MERCHANT]);
+            $merchant2->setIsVerified(true);
+            
+            $hashedPassword = $this->passwordHasher->hashPassword($merchant2, 'password123');
+            $merchant2->setPassword($hashedPassword);
 
-        $this->entityManager->persist($merchant2);
-        $io->text('✓ Created merchant: dealer@autos.com');
+            $this->entityManager->persist($merchant2);
+            $io->text('✓ Created merchant: dealer@autos.com');
+        }
 
-        // Store users for vehicle creation
-        $this->merchant = $merchant;
-        $this->merchant2 = $merchant2;
-        $this->buyer = $buyer;
+        // Store users for vehicle creation (get existing or newly created)
+        $this->merchant = $existingMerchant ?? $merchant;
+        $this->merchant2 = $existingMerchant2 ?? $merchant2;
+        $this->buyer = $existingBuyer ?? $buyer;
     }
 
     private function createVehicles(SymfonyStyle $io): void
     {
         $io->section('Creating Vehicles');
+
+        // Check if vehicles already exist
+        $existingVehicles = $this->entityManager->getRepository(\App\Entity\Vehicle::class)->count([]);
+        if ($existingVehicles > 0) {
+            $io->text("✓ Vehicles already exist ({$existingVehicles} vehicles found)");
+            return;
+        }
 
         // Cars
         $this->createCar('Toyota', 'Camry', '2.5', 'Silver', '28000.00', 3, 4, 'Sedan', $this->merchant);

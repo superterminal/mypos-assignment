@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mypos-symfony-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+    ports:
+      - "8000:80"
+    environment:
+      - APP_ENV=dev
+      - APP_DEBUG=1
+      - APP_SECRET=your-secret-key-here
+      - DATABASE_URL=sqlite:///%kernel.project_dir%/var/data/data_dev.db
+      - MAILER_DSN=null://null
+      - FROM_EMAIL=noreply@mypos-carmarket.com

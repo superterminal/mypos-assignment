@@ -36,6 +36,39 @@ A comprehensive vehicle marketplace application built with Symfony 7.3, featurin
 
 ## Installation
 
+### Option 1: Docker Setup (Recommended)
+
+**Prerequisites**: Docker and Docker Compose installed on your system
+
+1. **Clone the repository:**
+   ```bash
+   git clone <your-repo-url>
+   cd mypos-symfony-app
+   ```
+
+2. **Start the application with Docker:**
+   ```bash
+   docker-compose up --build -d
+   ```
+
+3. **Access the application:**
+   - **Application**: http://localhost:8000
+   - **Login credentials** (automatically seeded):
+     - **Merchant**: merchant@test.com / password123
+     - **Buyer**: buyer@test.com / password123
+     - **Dealer**: dealer@autos.com / password123
+
+**That's it!** The Docker setup will automatically:
+- Build the PHP 8.3 + Apache container
+- Set up SQLite database
+- Run database migrations
+- Seed the database with test data
+- Start the web server
+
+**📖 For detailed Docker setup instructions, see [DOCKER_README.md](DOCKER_README.md)**
+
+### Option 2: Manual Setup
+
 1. **Clone or navigate to the project directory:**
    ```bash
    cd mypos-symfony-app
@@ -73,22 +106,75 @@ A comprehensive vehicle marketplace application built with Symfony 7.3, featurin
 
 ## Running the Application
 
-### Option 1: Using Symfony CLI (Recommended)
+### Docker (Recommended)
 ```bash
+# Start the application (first time or after changes)
+docker-compose up --build -d
+
+# Start the application (subsequent times)
+docker-compose up -d
+
+# Stop the application
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# Restart the application
+docker-compose restart
+
+# Access container shell
+docker-compose exec app bash
+
+# Run Symfony commands
+docker-compose exec app php bin/console [command]
+```
+
+### Manual Setup
+```bash
+# Option 1: Using Symfony CLI
 symfony serve
-```
 
-### Option 2: Using PHP built-in server
-```bash
+# Option 2: Using PHP built-in server
 php -S localhost:8000 -t public/
-```
 
-### Option 3: Using Symfony console
-```bash
+# Option 3: Using Symfony console
 php bin/console server:start
 ```
 
 The application will be available at `http://localhost:8000`
+
+## Quick Start Guide
+
+### For New Users (Docker)
+```bash
+# 1. Clone the repository
+git clone <your-repo-url>
+cd mypos-symfony-app
+
+# 2. Start the application
+docker-compose up --build -d
+
+# 3. Access the application
+open http://localhost:8000
+
+# 4. Login with test credentials
+# Merchant: merchant@test.com / password123
+# Buyer: buyer@test.com / password123
+```
+
+### Troubleshooting
+```bash
+# If the application won't start
+docker-compose logs
+
+# If you need to reset the database
+docker-compose down
+docker-compose up --build -d
+
+# If port 8000 is already in use
+# Edit docker-compose.yml and change "8000:80" to "8001:80"
+```
 
 ## Project Structure
 
@@ -145,26 +231,80 @@ mypos-symfony-app/
 
 ## Available Commands
 
-### Database
-- `php bin/console doctrine:database:create` - Create database
-- `php bin/console make:migration` - Generate migration
-- `php bin/console doctrine:migrations:migrate` - Run migrations
+### Docker Commands
+```bash
+# Start the application
+docker-compose up --build -d
 
-### Data Management
-- `php bin/console app:seed-data` - Populate database with sample users and vehicles
-- `php bin/console app:clear-data` - Clear all seeded data from database
-- `php bin/console app:clear-cache` - Clear all Symfony caches
+# Stop the application
+docker-compose down
 
-### Development
-- `php bin/console make:entity` - Create new entity
-- `php bin/console make:controller` - Create new controller
-- `php bin/console make:test` - Create new test
+# View logs
+docker-compose logs -f
 
-### Testing
-- `php bin/phpunit` - Run all tests (26 tests total)
-- `php bin/phpunit --testsuite=unit` - Run unit tests (8 tests)
-- `php bin/phpunit --testsuite=integration` - Run integration tests (6 tests)
-- `php bin/phpunit --testsuite=application` - Run application tests (12 tests)
+# Access container shell
+docker-compose exec app bash
+
+# Run Symfony commands in container
+docker-compose exec app php bin/console [command]
+
+# Run tests in container
+docker-compose exec app php bin/phpunit
+```
+
+### Database Commands
+```bash
+# Local development
+php bin/console doctrine:database:create
+php bin/console make:migration
+php bin/console doctrine:migrations:migrate
+
+# Docker
+docker-compose exec app php bin/console doctrine:database:create
+docker-compose exec app php bin/console make:migration
+docker-compose exec app php bin/console doctrine:migrations:migrate
+```
+
+### Data Management Commands
+```bash
+# Local development
+php bin/console app:seed-data
+php bin/console app:clear-data
+php bin/console app:clear-cache
+
+# Docker
+docker-compose exec app php bin/console app:seed-data
+docker-compose exec app php bin/console app:clear-data
+docker-compose exec app php bin/console app:clear-cache
+```
+
+### Development Commands
+```bash
+# Local development
+php bin/console make:entity
+php bin/console make:controller
+php bin/console make:test
+
+# Docker
+docker-compose exec app php bin/console make:entity
+docker-compose exec app php bin/console make:controller
+docker-compose exec app php bin/console make:test
+```
+
+### Testing Commands
+```bash
+# Local development
+php bin/phpunit
+php bin/phpunit --testsuite=unit
+php bin/phpunit --testsuite=integration
+php bin/phpunit --testsuite=application
+
+# Docker
+docker-compose exec app php bin/phpunit
+docker-compose exec app php bin/phpunit --testsuite=unit
+docker-compose exec app php bin/phpunit --testsuite=integration
+docker-compose exec app php bin/phpunit --testsuite=application
+```
 
 ## User Roles & Permissions
 
