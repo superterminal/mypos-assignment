@@ -28,7 +28,7 @@ A comprehensive vehicle marketplace application built with Symfony 7.3, featurin
 - **Validation** - Both frontend and backend validation with Symfony Validator
 - **Comprehensive Testing** - 26 tests covering unit, integration, and application layers
 - **Doctrine ORM** - Advanced database operations with inheritance support
-- **Email System** - SMTP integration with Gmail/Mailtrap support
+- **Email System** - SMTP integration with Gmail support
 - **Custom Error Pages** - Branded 404 and error handling
 - **Autocomplete Features** - Dynamic brand/model suggestions for vehicle forms
 - **CSRF Protection** - Secure form submissions
@@ -53,10 +53,6 @@ A comprehensive vehicle marketplace application built with Symfony 7.3, featurin
 
 3. **Access the application:**
    - **Application**: http://localhost:8000
-   - **Login credentials** (automatically seeded):
-     - **Merchant**: merchant@test.com / password123
-     - **Buyer**: buyer@test.com / password123
-     - **Dealer**: dealer@autos.com / password123
 
 **That's it!** The Docker setup will automatically:
 - Build the PHP 8.3 + Apache container
@@ -65,7 +61,8 @@ A comprehensive vehicle marketplace application built with Symfony 7.3, featurin
 - Seed the database with test data
 - Start the web server
 
-**📖 For detailed Docker setup instructions, see [DOCKER_README.md](DOCKER_README.md)**
+**Note**: The Docker setup uses `MAILER_DSN="null://null"` (email disabled) for development. To enable email functionality, you can override the environment variable in `docker-compose.yml`.
+
 
 ### Option 2: Manual Setup
 
@@ -86,13 +83,13 @@ A comprehensive vehicle marketplace application built with Symfony 7.3, featurin
    MAILER_DSN="gmail://your-email@gmail.com:your-app-password@smtp.gmail.com:587"
    FROM_EMAIL="your-email@gmail.com"
    
-   # For Mailtrap (development)
-   MAILER_DSN="smtp://username:password@sandbox.smtp.mailtrap.io:2525"
+   # For development (email disabled)
+   MAILER_DSN="null://null"
    FROM_EMAIL="noreply@mypos-carmarket.com"
    ```
 
 4. **Database setup:**
-   The application is configured to use SQLite database. The database file will be created automatically at `var/data_dev.db`.
+   The application is configured to use SQLite database. The database file will be created automatically at `var/data/data_dev.db`.
 
 5. **Run migrations:**
    ```bash
@@ -158,10 +155,7 @@ docker-compose up --build -d
 # 3. Access the application
 open http://localhost:8000
 
-# 4. Login with test credentials
-# Merchant: merchant@test.com / password123
-# Buyer: buyer@test.com / password123
-```
+# 4. Login with credentials
 
 ### Troubleshooting
 ```bash
@@ -206,8 +200,9 @@ mypos-symfony-app/
 ├── public/             # Web assets
 │   └── car-data.json   # Vehicle brand/model data
 └── var/                # Variable data
-    ├── data_dev.db     # SQLite database
-    ├── data_test.db    # Test database
+    ├── data/           # Database directory
+    │   ├── data_dev.db # SQLite database
+    │   └── data_test.db # Test database
     └── logs/           # Application logs
 ```
 
@@ -250,6 +245,9 @@ docker-compose exec app php bin/console [command]
 
 # Run tests in container
 docker-compose exec app php bin/phpunit
+
+# Enable email functionality (edit docker-compose.yml)
+# Change MAILER_DSN from "null://null" to your SMTP configuration
 ```
 
 ### Database Commands
@@ -402,7 +400,7 @@ php bin/phpunit --coverage-html coverage/
 ```
 
 ### Test Environment
-- Separate SQLite test database (`var/data_test.db`)
+- Separate SQLite test database (`var/data/data_test.db`)
 - Isolated test configuration
 - Automatic database schema creation/cleanup
 - Mock email sending for tests
@@ -415,7 +413,7 @@ php bin/phpunit --coverage-html coverage/
 - **ORM**: Doctrine with inheritance support
 - **Validation**: Symfony Validator
 - **Testing**: PHPUnit with Symfony Test Pack
-- **Email**: SMTP integration (Gmail/Mailtrap)
+- **Email**: SMTP integration (Gmail) or disabled for development
 - **Logging**: Custom LoggerService for application logs
 - **Error Handling**: Custom error pages and controllers
 
@@ -427,7 +425,7 @@ The application is configured for development with:
 - Hot reloading for templates
 - SQLite for easy development setup
 - Comprehensive logging with custom LoggerService
-- Email testing with Mailtrap integration
+- Email testing with disabled mailer for development
 - Autocomplete features for vehicle forms
 - CSRF protection on all forms
 - Custom error handling with branded 404 pages
@@ -455,7 +453,7 @@ The application includes a comprehensive email system for user communication:
 ### Features
 - **Welcome Emails**: Sent to new users upon registration
 - **Password Reset**: Secure token-based password recovery
-- **SMTP Integration**: Support for Gmail and Mailtrap
+- **SMTP Integration**: Support for Gmail or disabled for development
 - **Template System**: Branded email templates with responsive design
 
 ### Configuration
@@ -464,8 +462,8 @@ The application includes a comprehensive email system for user communication:
 MAILER_DSN="gmail://your-email@gmail.com:your-app-password@smtp.gmail.com:587"
 FROM_EMAIL="your-email@gmail.com"
 
-# Mailtrap (Development)
-MAILER_DSN="smtp://username:password@sandbox.smtp.mailtrap.io:2525"
+# Development (Email disabled)
+MAILER_DSN="null://null"
 FROM_EMAIL="noreply@mypos-carmarket.com"
 ```
 
