@@ -132,13 +132,18 @@ class VehicleRepository extends ServiceEntityRepository
      */
     public function findDistinctBrands(): array
     {
-        $result = $this->createQueryBuilder('v')
-            ->select('DISTINCT v.brand')
-            ->orderBy('v.brand', 'ASC')
-            ->getQuery()
-            ->getScalarResult();
+        try {
+            $result = $this->createQueryBuilder('v')
+                ->select('DISTINCT v.brand')
+                ->orderBy('v.brand', 'ASC')
+                ->getQuery()
+                ->getScalarResult();
 
-        return array_column($result, 'brand');
+            return array_column($result, 'brand');
+        } catch (\Exception $e) {
+            // Return empty array if database is empty or not accessible
+            return [];
+        }
     }
 
     /**
@@ -146,13 +151,18 @@ class VehicleRepository extends ServiceEntityRepository
      */
     public function findDistinctColours(): array
     {
-        $result = $this->createQueryBuilder('v')
-            ->select('DISTINCT v.colour')
-            ->orderBy('v.colour', 'ASC')
-            ->getQuery()
-            ->getScalarResult();
+        try {
+            $result = $this->createQueryBuilder('v')
+                ->select('DISTINCT v.colour')
+                ->orderBy('v.colour', 'ASC')
+                ->getQuery()
+                ->getScalarResult();
 
-        return array_column($result, 'colour');
+            return array_column($result, 'colour');
+        } catch (\Exception $e) {
+            // Return empty array if database is empty or not accessible
+            return [];
+        }
     }
 
     /**
@@ -160,12 +170,17 @@ class VehicleRepository extends ServiceEntityRepository
      */
     public function findDistinctModels(): array
     {
-        $result = $this->createQueryBuilder('v')
-            ->select('DISTINCT v.model')
-            ->orderBy('v.model', 'ASC')
-            ->getQuery()
-            ->getScalarResult();
+        try {
+            $result = $this->createQueryBuilder('v')
+                ->select('DISTINCT v.model')
+                ->orderBy('v.model', 'ASC')
+                ->getQuery()
+                ->getScalarResult();
 
-        return array_column($result, 'model');
+            return array_column($result, 'model');
+        } catch (\Exception $e) {
+            // Return empty array if database is empty or not accessible
+            return [];
+        }
     }
 }
