@@ -75,6 +75,15 @@ if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then\n\
     echo "Dependencies missing, running composer install..."\n\
     composer install --optimize-autoloader\n\
 fi\n\
+echo "Creating .env file from environment variables..."\n\
+cat > .env << EOF\n\
+APP_ENV=${APP_ENV:-dev}\n\
+APP_DEBUG=${APP_DEBUG:-1}\n\
+APP_SECRET=${APP_SECRET:-your-secret-key-here}\n\
+DATABASE_URL=${DATABASE_URL:-sqlite:///%kernel.project_dir%/var/data/data_dev.db}\n\
+MAILER_DSN=${MAILER_DSN:-null://null}\n\
+FROM_EMAIL=${FROM_EMAIL:-noreply@mypos-carmarket.com}\n\
+EOF\n\
 echo "Setting up SQLite database..."\n\
 mkdir -p var/data\n\
 echo "Running database migrations..."\n\
