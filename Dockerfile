@@ -70,6 +70,11 @@ RUN mkdir -p var/cache var/log var/data \
 RUN echo '#!/bin/bash\n\
 set -e\n\
 echo "🚀 Starting MyPOS Vehicle Marketplace..."\n\
+echo "Checking dependencies..."\n\
+if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then\n\
+    echo "Dependencies missing, running composer install..."\n\
+    composer install --optimize-autoloader\n\
+fi\n\
 echo "Setting up SQLite database..."\n\
 mkdir -p var/data\n\
 echo "Running database migrations..."\n\
