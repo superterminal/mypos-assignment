@@ -49,13 +49,13 @@ RUN echo '<VirtualHost *:80>\n\
 COPY composer.json composer.lock ./
 
 # Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-autoloader
+RUN composer install --optimize-autoloader --no-scripts --no-autoloader
 
 # Copy the rest of the application
 COPY . .
 
 # Dump optimized autoloader
-RUN composer dump-autoload --optimize --no-dev
+RUN composer dump-autoload --optimize
 
 # Set proper permissions
 RUN chown -R www-data:www-data /var/www/html \
