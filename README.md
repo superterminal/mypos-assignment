@@ -141,23 +141,7 @@ php bin/console server:start
 
 The application will be available at `http://localhost:8000`
 
-## Quick Start Guide
-
-### For New Users (Docker)
-```bash
-# 1. Clone the repository
-git clone <your-repo-url>
-cd mypos-symfony-app
-
-# 2. Start the application
-docker-compose up --build -d
-
-# 3. Access the application
-open http://localhost:8000
-
-# 4. Login with credentials
-
-### Troubleshooting
+## Troubleshooting
 ```bash
 # If the application won't start
 docker-compose logs
