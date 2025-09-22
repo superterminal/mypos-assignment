@@ -2,6 +2,7 @@
 
 namespace App\Tests\Integration\Service;
 
+use App\DTO\VehicleCreateDTO;
 use App\DTO\VehicleFilterDTO;
 use App\Entity\User;
 use App\Entity\Vehicle;
@@ -46,20 +47,19 @@ class VehicleServiceIntegrationTest extends KernelTestCase
     {
         $merchant = $this->createTestMerchant();
         
-        $data = [
-            'type' => 'car',
-            'brand' => 'Toyota',
-            'model' => 'Camry',
-            'engine_capacity' => '2.5',
-            'colour' => 'Blue',
-            'price' => '25000.00',
-            'quantity' => '5',
-            'doors' => '4',
-            'category' => 'Sedan'
-        ];
+        // Create DTO
+        $dto = new VehicleCreateDTO();
+        $dto->type = 'car';
+        $dto->brand = 'Toyota';
+        $dto->model = 'Camry';
+        $dto->engineCapacity = '2.5';
+        $dto->colour = 'Blue';
+        $dto->price = '25000.00';
+        $dto->quantity = 5;
+        $dto->doors = 4;
+        $dto->category = 'Sedan';
         
-        $vehicle = $this->vehicleService->createVehicle($data, $merchant);
-        $this->entityManager->flush();
+        $vehicle = $this->vehicleService->createVehicle($dto, $merchant);
         
         $retrievedVehicle = $this->vehicleService->getVehicleById($vehicle->getId());
         

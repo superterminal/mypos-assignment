@@ -2,8 +2,10 @@
 
 namespace App\Service;
 
+use App\DTO\VehicleCreateDTO;
 use App\DTO\VehicleFilterDTO;
 use App\DTO\VehicleListDTO;
+use App\DTO\VehicleUpdateDTO;
 use App\Entity\Car;
 use App\Entity\Motorcycle;
 use App\Entity\Trailer;
@@ -12,12 +14,14 @@ use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Repository\VehicleRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class VehicleService
 {
     public function __construct(
         private VehicleRepository $vehicleRepository,
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private ValidatorInterface $validator
     ) {
     }
 
@@ -36,19 +40,42 @@ class VehicleService
         return $this->vehicleRepository->find($id);
     }
 
-    public function createVehicle(array $data, User $merchant): Vehicle
+    public function createVehicle(VehicleCreateDTO $dto, User $merchant): Vehicle
     {
+        // Validate the DTO
+        $violations = $this->validator->validate($dto, null, $dto->getValidationGroups());
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = $violation->getPropertyPath() . ': ' . $violation->getMessage();
+            }
+            throw new \InvalidArgumentException('Validation failed: ' . implode(', ', $errors));
+        }
+
+        $data = $dto->toArray();
         $vehicle = $this->createVehicleByType($data['type'], $data);
         $vehicle->setMerchant($merchant);
         $vehicle->setUpdatedAt(new \DateTime());
 
-        $this->vehicleRepository->save($vehicle, true);
+        $this->entityManager->persist($vehicle);
+        $this->entityManager->flush();
 
         return $vehicle;
     }
 
-    public function updateVehicle(Vehicle $vehicle, array $data): Vehicle
+    public function updateVehicle(Vehicle $vehicle, VehicleUpdateDTO $dto): Vehicle
     {
+        // Validate the DTO
+        $violations = $this->validator->validate($dto, null, $dto->getValidationGroups());
+        if (count($violations) > 0) {
+            $errors = [];
+            foreach ($violations as $violation) {
+                $errors[] = $violation->getPropertyPath() . ': ' . $violation->getMessage();
+            }
+            throw new \InvalidArgumentException('Validation failed: ' . implode(', ', $errors));
+        }
+
+        $data = $dto->toArray();
         $vehicle->setBrand($data['brand']);
         $vehicle->setModel($data['model']);
         $vehicle->setEngineCapacity($data['engine_capacity']);
@@ -60,7 +87,7 @@ class VehicleService
         // Update specific attributes based on type
         $this->updateSpecificAttributes($vehicle, $data);
 
-        $this->vehicleRepository->save($vehicle, true);
+        $this->entityManager->flush();
 
         return $vehicle;
     }
@@ -77,7 +104,7 @@ class VehicleService
         }
 
         $vehicle->addFollower($user);
-        $this->vehicleRepository->save($vehicle, true);
+        $this->entityManager->flush();
 
         return true;
     }
@@ -89,7 +116,7 @@ class VehicleService
         }
 
         $vehicle->removeFollower($user);
-        $this->vehicleRepository->save($vehicle, true);
+        $this->entityManager->flush();
 
         return true;
     }

@@ -2,6 +2,7 @@
 
 namespace App\Tests\Unit\Service;
 
+use App\DTO\VehicleCreateDTO;
 use App\DTO\VehicleFilterDTO;
 use App\Entity\User;
 use App\Entity\Vehicle;
@@ -11,21 +12,26 @@ use App\Service\VehicleService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
+use Symfony\Component\Validator\ConstraintViolationList;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class VehicleServiceTest extends TestCase
 {
     private VehicleService $vehicleService;
     private EntityManagerInterface|MockObject $entityManager;
     private VehicleRepository|MockObject $vehicleRepository;
+    private ValidatorInterface|MockObject $validator;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->vehicleRepository = $this->createMock(VehicleRepository::class);
+        $this->validator = $this->createMock(ValidatorInterface::class);
         
         $this->vehicleService = new VehicleService(
             $this->vehicleRepository,
-            $this->entityManager
+            $this->entityManager,
+            $this->validator
         );
     }
 
@@ -33,24 +39,35 @@ class VehicleServiceTest extends TestCase
     {
         $merchant = $this->createMockUser();
         
-        $data = [
-            'type' => 'car',
-            'brand' => 'Toyota',
-            'model' => 'Camry',
-            'engine_capacity' => '2.5',
-            'colour' => 'Blue',
-            'price' => '25000.00',
-            'quantity' => '5',
-            'doors' => '4',
-            'category' => 'Sedan'
-        ];
+        // Create DTO
+        $dto = new VehicleCreateDTO();
+        $dto->type = 'car';
+        $dto->brand = 'Toyota';
+        $dto->model = 'Camry';
+        $dto->engineCapacity = '2.5';
+        $dto->colour = 'Blue';
+        $dto->price = '25000.00';
+        $dto->quantity = 5;
+        $dto->doors = 4;
+        $dto->category = 'Sedan';
 
-        $this->vehicleRepository
+        // Mock validation to return no violations
+        $this->validator
             ->expects($this->once())
-            ->method('save')
-            ->with($this->isInstanceOf(Car::class), true);
+            ->method('validate')
+            ->willReturn(new ConstraintViolationList());
 
-        $vehicle = $this->vehicleService->createVehicle($data, $merchant);
+        // Mock entity manager
+        $this->entityManager
+            ->expects($this->once())
+            ->method('persist')
+            ->with($this->isInstanceOf(Car::class));
+
+        $this->entityManager
+            ->expects($this->once())
+            ->method('flush');
+
+        $vehicle = $this->vehicleService->createVehicle($dto, $merchant);
 
         $this->assertInstanceOf(Car::class, $vehicle);
         $this->assertEquals('Toyota', $vehicle->getBrand());
@@ -109,10 +126,9 @@ class VehicleServiceTest extends TestCase
             ->method('addFollower')
             ->with($user);
 
-        $this->vehicleRepository
+        $this->entityManager
             ->expects($this->once())
-            ->method('save')
-            ->with($vehicle, true);
+            ->method('flush');
 
         $result = $this->vehicleService->followVehicle($vehicle, $user);
 
@@ -155,10 +171,9 @@ class VehicleServiceTest extends TestCase
             ->method('removeFollower')
             ->with($user);
 
-        $this->vehicleRepository
+        $this->entityManager
             ->expects($this->once())
-            ->method('save')
-            ->with($vehicle, true);
+            ->method('flush');
 
         $result = $this->vehicleService->unfollowVehicle($vehicle, $user);
 

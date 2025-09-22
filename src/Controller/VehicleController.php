@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\DTO\VehicleCreateDTO;
 use App\DTO\VehicleFilterDTO;
+use App\DTO\VehicleUpdateDTO;
 use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Service\VehicleService;
@@ -132,21 +134,60 @@ class VehicleController extends AbstractController
     #[IsGranted('ROLE_MERCHANT')]
     public function new(Request $request): Response
     {
+        $dto = new VehicleCreateDTO();
+        $errors = [];
+
         if ($request->isMethod('POST')) {
-            $data = $request->request->all();
-            
-            try {
-                /** @var User $user */
-                $user = $this->getUser();
-                $vehicle = $this->vehicleService->createVehicle($data, $user);
-                $this->addFlash('success', 'Vehicle created successfully!');
-                return $this->redirectToRoute('app_merchant_vehicles');
-            } catch (\Exception $e) {
-                $this->addFlash('error', 'Failed to create vehicle: ' . $e->getMessage());
+            // Populate DTO from request data
+            $dto->type = $request->request->get('type', '');
+            $dto->brand = $request->request->get('brand', '');
+            $dto->model = $request->request->get('model', '');
+            $dto->colour = $request->request->get('colour', '');
+            $dto->price = $request->request->get('price', '');
+            $dto->quantity = (int) $request->request->get('quantity', 0);
+            $dto->engineCapacity = $request->request->get('engine_capacity');
+
+            // Set type-specific fields
+            switch ($dto->type) {
+                case 'car':
+                    $doorsValue = $request->request->get('doors');
+                    $dto->doors = $doorsValue !== null && $doorsValue !== '' ? (int) $doorsValue : null;
+                    $dto->category = $request->request->get('category') ?: null;
+                    break;
+                case 'truck':
+                    $bedsValue = $request->request->get('beds');
+                    $dto->beds = $bedsValue !== null && $bedsValue !== '' ? (int) $bedsValue : null;
+                    break;
+                case 'trailer':
+                    $dto->loadCapacityKg = $request->request->get('load_capacity_kg') ?: null;
+                    $axlesValue = $request->request->get('axles');
+                    $dto->axles = $axlesValue !== null && $axlesValue !== '' ? (int) $axlesValue : null;
+                    break;
+            }
+
+            // Validate the DTO
+            $violations = $this->validator->validate($dto, null, $dto->getValidationGroups());
+            if (count($violations) === 0) {
+                try {
+                    /** @var User $user */
+                    $user = $this->getUser();
+                    $vehicle = $this->vehicleService->createVehicle($dto, $user);
+                    $this->addFlash('success', 'Vehicle created successfully!');
+                    return $this->redirectToRoute('app_merchant_vehicles');
+                } catch (\Exception $e) {
+                    $this->addFlash('error', 'Failed to create vehicle: ' . $e->getMessage());
+                }
+            } else {
+                foreach ($violations as $violation) {
+                    $errors[] = $violation->getMessage();
+                }
             }
         }
 
-        return $this->render('vehicle/new.html.twig');
+        return $this->render('vehicle/new.html.twig', [
+            'dto' => $dto,
+            'errors' => $errors,
+        ]);
     }
 
     #[Route('/merchant/vehicle/{id}/edit', name: 'app_vehicle_edit', requirements: ['id' => '\d+'])]
@@ -165,20 +206,57 @@ class VehicleController extends AbstractController
             throw $this->createAccessDeniedException('You can only edit your own vehicles');
         }
 
+        $dto = VehicleUpdateDTO::fromVehicle($vehicle);
+        $errors = [];
+
         if ($request->isMethod('POST')) {
-            $data = $request->request->all();
-            
-            try {
-                $this->vehicleService->updateVehicle($vehicle, $data);
-                $this->addFlash('success', 'Vehicle updated successfully!');
-                return $this->redirectToRoute('app_merchant_vehicles');
-            } catch (\Exception $e) {
-                $this->addFlash('error', 'Failed to update vehicle: ' . $e->getMessage());
+            // Populate DTO from request data
+            $dto->brand = $request->request->get('brand', '');
+            $dto->model = $request->request->get('model', '');
+            $dto->colour = $request->request->get('colour', '');
+            $dto->price = $request->request->get('price', '');
+            $dto->quantity = (int) $request->request->get('quantity', 0);
+            $dto->engineCapacity = $request->request->get('engine_capacity');
+
+            // Set type-specific fields
+            switch ($vehicle->getType()) {
+                case 'car':
+                    $doorsValue = $request->request->get('doors');
+                    $dto->doors = $doorsValue !== null && $doorsValue !== '' ? (int) $doorsValue : null;
+                    $dto->category = $request->request->get('category') ?: null;
+                    break;
+                case 'truck':
+                    $bedsValue = $request->request->get('beds');
+                    $dto->beds = $bedsValue !== null && $bedsValue !== '' ? (int) $bedsValue : null;
+                    break;
+                case 'trailer':
+                    $dto->loadCapacityKg = $request->request->get('load_capacity_kg') ?: null;
+                    $axlesValue = $request->request->get('axles');
+                    $dto->axles = $axlesValue !== null && $axlesValue !== '' ? (int) $axlesValue : null;
+                    break;
+            }
+
+            // Validate the DTO
+            $violations = $this->validator->validate($dto, null, $dto->getValidationGroups());
+            if (count($violations) === 0) {
+                try {
+                    $this->vehicleService->updateVehicle($vehicle, $dto);
+                    $this->addFlash('success', 'Vehicle updated successfully!');
+                    return $this->redirectToRoute('app_merchant_vehicles');
+                } catch (\Exception $e) {
+                    $this->addFlash('error', 'Failed to update vehicle: ' . $e->getMessage());
+                }
+            } else {
+                foreach ($violations as $violation) {
+                    $errors[] = $violation->getMessage();
+                }
             }
         }
 
         return $this->render('vehicle/edit.html.twig', [
             'vehicle' => $vehicle,
+            'dto' => $dto,
+            'errors' => $errors,
         ]);
     }
 
