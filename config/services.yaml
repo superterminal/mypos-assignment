@@ -31,8 +31,10 @@ services:
             $fromEmail: '%app.from_email%'
     App\Service\LoggerService:
         public: true
-        arguments:
-            $projectDir: '%kernel.project_dir%'
+    App\Service\VehicleSerializer:
+        public: true
+    App\Service\ApiResponseService:
+        public: true
     
     # Make security services public for testing
     Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface:

@@ -2,65 +2,57 @@
 
 namespace App\Service;
 
+use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Request;
+
 class LoggerService
 {
-    private string $logDir;
+    public function __construct(
+        private LoggerInterface $logger
+    ) {
+    }
 
-    public function __construct(string $projectDir)
+    public function logApiRequest(string $endpoint, Request $request, ?array $response = null, ?\Exception $exception = null): void
     {
-        $this->logDir = $projectDir . '/var/log';
-        
-        // Create log directory if it doesn't exist
-        if (!is_dir($this->logDir)) {
-            mkdir($this->logDir, 0755, true);
+        $context = [
+            'endpoint' => $endpoint,
+            'method' => $request->getMethod(),
+            'ip' => $request->getClientIp(),
+            'user_agent' => $request->headers->get('User-Agent'),
+            'timestamp' => new \DateTime(),
+        ];
+
+        if ($response) {
+            $context['response_status'] = $response['status'] ?? 'unknown';
+        }
+
+        if ($exception) {
+            $context['exception'] = $exception->getMessage();
+            $context['exception_trace'] = $exception->getTraceAsString();
+            $this->logger->error('API request failed', $context);
+        } else {
+            $this->logger->info('API request completed', $context);
         }
     }
 
-    public function log(string $level, string $message, array $context = []): void
+    public function logUserAction(string $action, ?string $userId = null, array $context = []): void
     {
-        $timestamp = date('Y-m-d H:i:s');
-        $contextStr = !empty($context) ? ' ' . json_encode($context) : '';
-        $logMessage = "[{$timestamp}] {$level}: {$message}{$contextStr}" . PHP_EOL;
-        
-        $logFile = $this->logDir . '/' . strtolower($level) . '.log';
-        file_put_contents($logFile, $logMessage, FILE_APPEND | LOCK_EX);
+        $logContext = array_merge([
+            'action' => $action,
+            'user_id' => $userId,
+            'timestamp' => new \DateTime(),
+        ], $context);
+
+        $this->logger->info('User action: ' . $action, $logContext);
     }
 
-    public function debug(string $message, array $context = []): void
+    public function logSecurityEvent(string $event, array $context = []): void
     {
-        $this->log('DEBUG', $message, $context);
-    }
+        $logContext = array_merge([
+            'security_event' => $event,
+            'timestamp' => new \DateTime(),
+        ], $context);
 
-    public function info(string $message, array $context = []): void
-    {
-        $this->log('INFO', $message, $context);
-    }
-
-    public function warning(string $message, array $context = []): void
-    {
-        $this->log('WARNING', $message, $context);
-    }
-
-    public function error(string $message, array $context = []): void
-    {
-        $this->log('ERROR', $message, $context);
-    }
-
-    public function critical(string $message, array $context = []): void
-    {
-        $this->log('CRITICAL', $message, $context);
-    }
-
-    public function logException(\Exception $exception, string $message = 'Exception occurred'): void
-    {
-        $context = [
-            'exception' => get_class($exception),
-            'message' => $exception->getMessage(),
-            'file' => $exception->getFile(),
-            'line' => $exception->getLine(),
-            'trace' => $exception->getTraceAsString()
-        ];
-        
-        $this->error($message, $context);
+        $this->logger->warning('Security event: ' . $event, $logContext);
     }
 }
