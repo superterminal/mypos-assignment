@@ -14,14 +14,12 @@ use App\Entity\User;
 use App\Entity\Vehicle;
 use App\Repository\VehicleRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class VehicleService
 {
     public function __construct(
         private VehicleRepository $vehicleRepository,
-        private EntityManagerInterface $entityManager,
-        private ValidatorInterface $validator
+        private EntityManagerInterface $entityManager
     ) {
     }
 
@@ -42,16 +40,6 @@ class VehicleService
 
     public function createVehicle(VehicleCreateDTO $dto, User $merchant): Vehicle
     {
-        // Validate the DTO
-        $violations = $this->validator->validate($dto, null, $dto->getValidationGroups());
-        if (count($violations) > 0) {
-            $errors = [];
-            foreach ($violations as $violation) {
-                $errors[] = $violation->getPropertyPath() . ': ' . $violation->getMessage();
-            }
-            throw new \InvalidArgumentException('Validation failed: ' . implode(', ', $errors));
-        }
-
         $data = $dto->toArray();
         $vehicle = $this->createVehicleByType($data['type'], $data);
         $vehicle->setMerchant($merchant);
@@ -65,16 +53,6 @@ class VehicleService
 
     public function updateVehicle(Vehicle $vehicle, VehicleUpdateDTO $dto): Vehicle
     {
-        // Validate the DTO
-        $violations = $this->validator->validate($dto, null, $dto->getValidationGroups());
-        if (count($violations) > 0) {
-            $errors = [];
-            foreach ($violations as $violation) {
-                $errors[] = $violation->getPropertyPath() . ': ' . $violation->getMessage();
-            }
-            throw new \InvalidArgumentException('Validation failed: ' . implode(', ', $errors));
-        }
-
         $data = $dto->toArray();
         $vehicle->setBrand($data['brand']);
         $vehicle->setModel($data['model']);

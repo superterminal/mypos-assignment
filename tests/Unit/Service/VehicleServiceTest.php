@@ -12,26 +12,21 @@ use App\Service\VehicleService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
-use Symfony\Component\Validator\ConstraintViolationList;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class VehicleServiceTest extends TestCase
 {
     private VehicleService $vehicleService;
     private EntityManagerInterface|MockObject $entityManager;
     private VehicleRepository|MockObject $vehicleRepository;
-    private ValidatorInterface|MockObject $validator;
 
     protected function setUp(): void
     {
         $this->entityManager = $this->createMock(EntityManagerInterface::class);
         $this->vehicleRepository = $this->createMock(VehicleRepository::class);
-        $this->validator = $this->createMock(ValidatorInterface::class);
         
         $this->vehicleService = new VehicleService(
             $this->vehicleRepository,
-            $this->entityManager,
-            $this->validator
+            $this->entityManager
         );
     }
 
@@ -51,11 +46,7 @@ class VehicleServiceTest extends TestCase
         $dto->doors = 4;
         $dto->category = 'Sedan';
 
-        // Mock validation to return no violations
-        $this->validator
-            ->expects($this->once())
-            ->method('validate')
-            ->willReturn(new ConstraintViolationList());
+        // No validation mocking needed - validation happens in controller
 
         // Mock entity manager
         $this->entityManager
