@@ -1,14 +1,15 @@
 # MyPOS Vehicle Marketplace
 
-A comprehensive vehicle marketplace application built with Symfony 7.3, featuring role-based authentication, vehicle management, and advanced filtering capabilities.
+A comprehensive vehicle marketplace application built with **Symfony 7.3** and **React**, featuring role-based authentication, vehicle management, and advanced filtering capabilities. The application uses a modern **hybrid architecture** with Symfony backend APIs and React frontend.
 
 ## Features
 
 ### Authentication & Authorization
-- **User Registration & Login** - Secure authentication with Symfony Security
+- **User Registration & Login** - Secure authentication with Symfony Security + React frontend
 - **Role-based Access Control** - Separate interfaces for Merchants and Buyers
 - **Password Reset** - Email-based password recovery system
 - **Session Management** - Remember me functionality
+- **API-based Authentication** - RESTful authentication endpoints with JSON responses
 
 ### Vehicle Management
 - **Multiple Vehicle Types** - Motorcycle, Car, Truck, and Trailer support
@@ -21,6 +22,8 @@ A comprehensive vehicle marketplace application built with Symfony 7.3, featurin
 - **Merchant Dashboard** - Manage vehicle inventory and view follower statistics
 - **Buyer Experience** - Browse vehicles, follow/unfollow, and maintain watchlists
 - **Responsive Design** - Bootstrap 5 for modern, mobile-friendly interface
+- **React Frontend** - Modern single-page application with React Router
+- **Real-time Updates** - Dynamic UI updates without page refreshes
 
 ### Technical Features
 - **Clean Architecture** - Thin controllers, service layer, repository pattern
@@ -33,6 +36,10 @@ A comprehensive vehicle marketplace application built with Symfony 7.3, featurin
 - **Autocomplete Features** - Dynamic brand/model suggestions for vehicle forms
 - **CSRF Protection** - Secure form submissions
 - **Custom Logging** - Application-level logging system
+- **React Integration** - Modern frontend with React Router and Axios
+- **API-First Design** - RESTful APIs with JSON responses
+- **Service Layer Improvements** - VehicleSerializer, ApiResponseService, LoggerService
+- **Security Enhancements** - Security headers, CORS support, rate limiting ready
 
 ## Installation
 
@@ -154,40 +161,100 @@ docker-compose up --build -d
 # Edit docker-compose.yml and change "8000:80" to "8001:80"
 ```
 
+## Architecture
+
+### Hybrid Architecture
+The application uses a **hybrid architecture** combining Symfony backend with React frontend:
+
+- **Symfony Backend**: Handles business logic, database operations, and API endpoints
+- **React Frontend**: Provides modern single-page application experience
+- **API Communication**: React communicates with Symfony via RESTful JSON APIs
+- **Session-based Authentication**: Symfony manages authentication, React handles UI
+
+### React Frontend Structure
+```
+assets/js/
+├── App.js              # Main React application with routing
+├── components/         # Reusable React components
+│   └── Navbar.js      # Navigation component
+└── pages/             # Page components
+    ├── Home.js        # Homepage
+    ├── Login.js       # Login form
+    ├── Register.js    # Registration form
+    ├── VehicleList.js # Vehicle listing with filters
+    ├── VehicleShow.js # Vehicle details
+    ├── VehicleNew.js  # Create vehicle form
+    ├── VehicleEdit.js # Edit vehicle form
+    ├── MerchantVehicles.js # Merchant dashboard
+    ├── FollowedVehicles.js # Buyer's followed vehicles
+    ├── ForgotPassword.js   # Password reset request
+    └── ResetPassword.js    # Password reset form
+```
+
+### API Endpoints
+The React frontend communicates with these Symfony API endpoints:
+
+#### Authentication APIs
+- `POST /api/login` - User authentication
+- `POST /api/register` - User registration
+- `POST /api/logout` - User logout
+- `GET /api/user/me` - Get current user data
+
+#### Vehicle APIs
+- `GET /api/vehicles` - List vehicles with filtering
+- `GET /api/vehicles/{id}` - Get vehicle details
+- `POST /api/vehicles` - Create new vehicle (merchants)
+- `PUT /api/vehicles/{id}` - Update vehicle (merchants)
+- `DELETE /api/vehicles/{id}` - Delete vehicle (merchants)
+- `POST /api/vehicles/{id}/follow` - Follow vehicle (buyers)
+- `DELETE /api/vehicles/{id}/follow` - Unfollow vehicle (buyers)
+
+#### Specialized APIs
+- `GET /api/merchant/vehicles` - Merchant's vehicle list
+- `GET /api/buyer/followed-vehicles` - Buyer's followed vehicles
+- `GET /api/vehicles/filter-options` - Available filter options
+- `GET /api/car-data` - Vehicle brand/model data for autocomplete
+
 ## Project Structure
 
 ```
 mypos-symfony-app/
-├── config/                 # Configuration files
-│   ├── packages/          # Package configurations (security, doctrine, etc.)
-│   └── routes.yaml        # Routing configuration
-├── migrations/            # Database migrations
-├── public/               # Web root
-│   └── index.php         # Entry point
-├── src/                  # Source code
-│   ├── Controller/       # Controllers (Auth, Vehicle, Home, API, Error)
-│   ├── Entity/          # Doctrine entities (User, Vehicle inheritance)
-│   ├── Repository/      # Doctrine repositories
-│   ├── Service/         # Business logic services
-│   ├── DTO/            # Data Transfer Objects
-│   └── Command/        # Console commands
-├── templates/           # Twig templates
-│   ├── auth/           # Authentication templates
-│   ├── vehicle/        # Vehicle management templates
-│   ├── emails/         # Email templates
-│   ├── bundles/        # Custom error pages
-│   └── base.html.twig  # Base template with navigation
-├── tests/              # Comprehensive test suite
-│   ├── Unit/           # Unit tests (isolated business logic)
-│   ├── Integration/    # Integration tests (database interactions)
-│   └── Application/    # Application tests (full HTTP requests)
-├── public/             # Web assets
-│   └── car-data.json   # Vehicle brand/model data
-└── var/                # Variable data
-    ├── data/           # Database directory
+├── assets/             # React frontend
+│   ├── js/            # JavaScript/React code
+│   │   ├── App.js     # Main React application
+│   │   ├── components/ # React components
+│   │   └── pages/     # Page components
+│   ├── css/           # Stylesheets
+│   └── styles/        # Additional styles
+├── config/             # Configuration files
+│   ├── packages/      # Package configurations (security, doctrine, etc.)
+│   └── routes.yaml    # Routing configuration
+├── migrations/         # Database migrations
+├── public/            # Web root
+│   ├── index.php      # Entry point
+│   └── build/         # Compiled assets
+├── src/               # Source code
+│   ├── Controller/    # Controllers (Auth, Vehicle, Home, API, Error)
+│   │   └── Api/       # API controllers for React
+│   ├── Entity/        # Doctrine entities (User, Vehicle inheritance)
+│   ├── Repository/    # Doctrine repositories
+│   ├── Service/       # Business logic services
+│   ├── DTO/           # Data Transfer Objects
+│   ├── EventListener/ # Event listeners
+│   └── Command/       # Console commands
+├── templates/         # Twig templates (minimal, mostly for React)
+│   ├── react_app.html.twig # React app container
+│   ├── emails/        # Email templates
+│   └── bundles/       # Custom error pages
+├── tests/             # Comprehensive test suite
+│   ├── Unit/          # Unit tests (isolated business logic)
+│   ├── Integration/   # Integration tests (database interactions)
+│   └── Application/   # Application tests (full HTTP requests)
+└── var/               # Variable data
+    ├── data/          # Database directory
     │   ├── data_dev.db # SQLite database
     │   └── data_test.db # Test database
-    └── logs/           # Application logs
+    └── logs/          # Application logs
 ```
 
 ## Vehicle Types & Validation
@@ -304,36 +371,49 @@ docker-compose exec app php bin/phpunit --testsuite=application
 
 ## API Endpoints
 
-### Authentication
-- `GET /login` - Login page
-- `POST /login` - Process login
-- `GET /register` - Registration page
-- `POST /register` - Process registration
-- `GET /logout` - Logout
-- `GET /forgot-password` - Password reset request
+### Traditional Routes (Redirect to React)
+- `GET /login` - Redirects to React login page
+- `GET /register` - Redirects to React registration page
+- `GET /logout` - Redirects to React app
+- `GET /forgot-password` - Password reset request (Twig template)
 - `POST /forgot-password` - Send reset email
-- `GET /reset-password/{token}` - Password reset form
+- `GET /reset-password/{token}` - Password reset form (Twig template)
 - `POST /reset-password/{token}` - Process password reset
 
-### Vehicles
-- `GET /vehicles` - Vehicle listing with filters and pagination
-- `GET /vehicle/{id}` - Vehicle details
-- `POST /vehicle/{id}/follow` - Follow vehicle (buyers only)
-- `POST /vehicle/{id}/unfollow` - Unfollow vehicle (buyers only)
+### React Routes (Client-side routing)
+- `/` - Homepage
+- `/login` - Login form
+- `/register` - Registration form
+- `/vehicles` - Vehicle listing with filters
+- `/vehicle/:id` - Vehicle details
+- `/merchant/vehicle/new` - Create vehicle form (merchants only)
+- `/merchant/vehicle/:id/edit` - Edit vehicle form (merchants only)
+- `/merchant/vehicles` - Merchant's vehicle list
+- `/buyer/followed` - Followed vehicles list (buyers only)
+- `/forgot-password` - Password reset request
+- `/reset-password/:token` - Password reset form
 
-### API Endpoints
-- `GET /api/car-data` - Get vehicle brand/model data for autocomplete
+### API Endpoints (JSON responses)
+#### Authentication APIs
+- `POST /api/login` - User authentication
+- `POST /api/register` - User registration
+- `POST /api/logout` - User logout
+- `GET /api/user/me` - Get current user data
 
-### Merchant Routes
-- `GET /merchant/vehicles` - Merchant's vehicle list
-- `GET /merchant/vehicle/new` - Create vehicle form
-- `POST /merchant/vehicle/new` - Process vehicle creation
-- `GET /merchant/vehicle/{id}/edit` - Edit vehicle form
-- `POST /merchant/vehicle/{id}/edit` - Process vehicle update
-- `POST /merchant/vehicle/{id}/delete` - Delete vehicle
+#### Vehicle APIs
+- `GET /api/vehicles` - List vehicles with filtering
+- `GET /api/vehicles/{id}` - Get vehicle details
+- `POST /api/vehicles` - Create new vehicle (merchants)
+- `PUT /api/vehicles/{id}` - Update vehicle (merchants)
+- `DELETE /api/vehicles/{id}` - Delete vehicle (merchants)
+- `POST /api/vehicles/{id}/follow` - Follow vehicle (buyers)
+- `DELETE /api/vehicles/{id}/follow` - Unfollow vehicle (buyers)
 
-### Buyer Routes
-- `GET /buyer/followed` - Followed vehicles list
+#### Specialized APIs
+- `GET /api/merchant/vehicles` - Merchant's vehicle list
+- `GET /api/buyer/followed-vehicles` - Buyer's followed vehicles
+- `GET /api/vehicles/filter-options` - Available filter options
+- `GET /api/car-data` - Vehicle brand/model data for autocomplete
 
 ## Testing
 
@@ -392,27 +472,66 @@ php bin/phpunit --coverage-html coverage/
 ## Configuration
 
 - **Database**: SQLite (configured in `.env`)
-- **Template Engine**: Twig with Bootstrap 5
-- **Authentication**: Symfony Security Bundle
+- **Frontend**: React with React Router and Axios
+- **Template Engine**: Twig (minimal, mostly for React container)
+- **Authentication**: Symfony Security Bundle with session-based auth
 - **ORM**: Doctrine with inheritance support
-- **Validation**: Symfony Validator
+- **Validation**: Symfony Validator with DTOs
 - **Testing**: PHPUnit with Symfony Test Pack
 - **Email**: SMTP integration (Gmail) or disabled for development
 - **Logging**: Custom LoggerService for application logs
 - **Error Handling**: Custom error pages and controllers
+- **API Design**: RESTful JSON APIs with standardized responses
 
 ## Development
 
 The application is configured for development with:
 - Debug mode enabled
 - Detailed error pages with custom branding
-- Hot reloading for templates
+- Hot reloading for templates and React components
 - SQLite for easy development setup
 - Comprehensive logging with custom LoggerService
 - Email testing with disabled mailer for development
 - Autocomplete features for vehicle forms
 - CSRF protection on all forms
 - Custom error handling with branded 404 pages
+- React development with hot reloading
+- API-first development approach
+
+## Service Layer Improvements
+
+The application includes several new service classes for better code organization:
+
+### VehicleSerializer
+- **Purpose**: Eliminates code duplication in vehicle serialization
+- **Features**: 
+  - Serializes individual vehicles and vehicle lists
+  - Handles type-specific attributes (car, truck, trailer)
+  - Manages follow status for buyers
+  - Proper error handling for missing merchants
+
+### ApiResponseService
+- **Purpose**: Standardizes API response format
+- **Features**:
+  - Consistent success/error response structure
+  - Validation error handling
+  - HTTP status code management
+  - Helper methods for common responses
+
+### LoggerService
+- **Purpose**: Structured logging for better monitoring
+- **Features**:
+  - API request logging
+  - User action logging
+  - Security event logging
+  - Structured context data
+
+### SecurityHeadersListener
+- **Purpose**: Adds security headers and CORS support
+- **Features**:
+  - Security headers (X-Content-Type-Options, X-Frame-Options, etc.)
+  - CORS headers for API endpoints
+  - Event listener for automatic header injection
 
 ## Architecture
 
@@ -422,6 +541,8 @@ The application is configured for development with:
 - **Repositories**: Data access layer with custom query methods
 - **DTOs**: Type-safe data transfer objects
 - **Entities**: Rich domain models with validation
+- **React Components**: Reusable UI components with state management
+- **API Layer**: RESTful endpoints with JSON responses
 
 ### Design Patterns
 - **Repository Pattern**: Data access abstraction
@@ -429,6 +550,9 @@ The application is configured for development with:
 - **DTO Pattern**: Data transfer optimization
 - **Inheritance**: Vehicle type specialization
 - **Dependency Injection**: Loose coupling
+- **Component Pattern**: React component composition
+- **API-First Design**: Backend APIs consumed by frontend
+- **Hybrid Architecture**: Symfony backend + React frontend
 
 ## Email System
 
@@ -500,3 +624,49 @@ FROM_EMAIL="noreply@mypos-carmarket.com"
 - `var/logs/application.log` - Main application log
 - Automatic directory creation
 - Configurable log levels
+
+## React Development
+
+### Frontend Development Workflow
+The application uses React for the frontend with the following setup:
+
+#### React Features
+- **React Router**: Client-side routing for single-page application
+- **Axios**: HTTP client for API communication
+- **Bootstrap 5**: Responsive UI framework
+- **Component-based Architecture**: Reusable UI components
+- **State Management**: React hooks for local state management
+
+#### Development Setup
+```bash
+# Install Node.js dependencies
+npm install
+
+# Build assets for development
+npm run dev
+
+# Build assets for production
+npm run build
+
+# Watch for changes during development
+npm run watch
+```
+
+#### React Components
+- **App.js**: Main application with routing and authentication state
+- **Navbar.js**: Navigation component with user authentication
+- **Page Components**: Individual pages for different features
+- **Form Components**: Reusable form components with validation
+
+#### API Integration
+- **Axios Configuration**: Automatic CSRF token handling
+- **Session Management**: Cookie-based authentication
+- **Error Handling**: Consistent error display across components
+- **Loading States**: User feedback during API calls
+
+#### Authentication Flow
+1. User visits `/login` or `/register` → React component renders
+2. Form submission → Axios POST to `/api/login` or `/api/register`
+3. Success response → React updates authentication state
+4. Redirect to appropriate page based on user role
+5. Subsequent API calls include session cookies automatically
