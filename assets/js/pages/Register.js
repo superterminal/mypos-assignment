@@ -34,20 +34,13 @@ const Register = ({ onLogin }) => {
                 },
             });
 
-            // If registration successful, user is automatically logged in
-            // Use the user data from the registration response
-            const userData = {
-                id: response.data.id,
-                email: response.data.email,
-                firstName: response.data.firstName,
-                lastName: response.data.lastName,
-                fullName: response.data.fullName,
-                isMerchant: response.data.isMerchant,
-                isBuyer: response.data.isBuyer,
-                roles: response.data.roles
-            };
-            onLogin(userData);
-            navigate('/');
+            // Registration successful - redirect to login page
+            navigate('/login', { 
+                state: { 
+                    message: 'Registration successful! Please log in to continue.',
+                    email: response.data.email 
+                } 
+            });
         } catch (error) {
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);

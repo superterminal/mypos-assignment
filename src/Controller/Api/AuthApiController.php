@@ -94,9 +94,11 @@ class AuthApiController extends AbstractController
         $dto = new UserRegistrationDTO();
         $dto->email = $data['email'] ?? '';
         $dto->password = $data['password'] ?? '';
+        $dto->confirmPassword = $data['confirmPassword'] ?? '';
         $dto->firstName = $data['firstName'] ?? '';
         $dto->lastName = $data['lastName'] ?? '';
-        $dto->role = $data['role'] ?? 'buyer';
+        $dto->userType = $data['userType'] ?? 'buyer';
+        $dto->role = $data['userType'] ?? 'buyer'; // Map userType to role for backward compatibility
 
         // Validate the DTO
         $violations = $this->validator->validate($dto);
@@ -109,20 +111,18 @@ class AuthApiController extends AbstractController
         }
 
         try {
-            $user = $this->userService->createUser($dto);
+            $user = $this->userService->register($dto);
             
             return new JsonResponse([
                 'message' => 'User registered successfully',
-                'user' => [
-                    'id' => $user->getId(),
-                    'email' => $user->getEmail(),
-                    'firstName' => $user->getFirstName(),
-                    'lastName' => $user->getLastName(),
-                    'fullName' => $user->getFullName(),
-                    'isMerchant' => $user->isMerchant(),
-                    'isBuyer' => $user->isBuyer(),
-                    'roles' => $user->getRoles()
-                ]
+                'id' => $user->getId(),
+                'email' => $user->getEmail(),
+                'firstName' => $user->getFirstName(),
+                'lastName' => $user->getLastName(),
+                'fullName' => $user->getFullName(),
+                'isMerchant' => $user->isMerchant(),
+                'isBuyer' => $user->isBuyer(),
+                'roles' => $user->getRoles()
             ], Response::HTTP_CREATED);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => 'Registration failed: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);

@@ -31,7 +31,7 @@ class VehicleUpdateDTO
 
     // Car-specific fields
     #[Assert\Type(type: 'integer', message: 'Doors must be a valid integer', groups: ['car'])]
-    #[Assert\Range(min: 2, max: 5, notInRangeMessage: 'Doors must be between {{ min }} and {{ max }}', groups: ['car'])]
+    #[Assert\Range(min: 1, max: 5, notInRangeMessage: 'Doors must be between {{ min }} and {{ max }}', groups: ['car'])]
     #[Assert\NotBlank(message: 'Doors is required for cars', groups: ['car'])]
     public ?int $doors = null;
 

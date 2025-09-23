@@ -1,15 +1,27 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = ({ onLogin }) => {
+    const location = useLocation();
     const [formData, setFormData] = useState({
-        email: '',
+        email: location.state?.email || '',
         password: ''
     });
     const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    // Clear success message after 5 seconds
+    useEffect(() => {
+        if (successMessage) {
+            const timer = setTimeout(() => {
+                setSuccessMessage('');
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [successMessage]);
 
     const handleChange = (e) => {
         setFormData({
@@ -54,6 +66,9 @@ const Login = ({ onLogin }) => {
                             <h3 className="text-center">Login</h3>
                         </div>
                         <div className="card-body">
+                            {successMessage && (
+                                <div className="alert alert-success">{successMessage}</div>
+                            )}
                             {error && (
                                 <div className="alert alert-danger">{error}</div>
                             )}

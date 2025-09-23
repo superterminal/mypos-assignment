@@ -19,6 +19,12 @@ class UserService
 
     public function register(UserRegistrationDTO $dto): User
     {
+        // Check if user with this email already exists
+        $existingUser = $this->userRepository->findOneBy(['email' => $dto->email]);
+        if ($existingUser) {
+            throw new \InvalidArgumentException('A user with this email address already exists.');
+        }
+
         $user = new User();
         $user->setEmail($dto->email);
         $user->setFirstName($dto->firstName);
@@ -38,6 +44,14 @@ class UserService
         }
 
         $this->userRepository->save($user, true);
+
+        // Send welcome email
+        try {
+            $this->emailService->sendWelcomeEmail($user);
+        } catch (\Exception $e) {
+            // Log the error but don't fail registration if email fails
+            error_log('Failed to send welcome email: ' . $e->getMessage());
+        }
 
         return $user;
     }
