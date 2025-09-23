@@ -31,13 +31,15 @@ const ResetPassword = () => {
         }
 
         try {
-            await axios.post('/reset-password', {
+            const response = await axios.post('/api/reset-password', {
                 token,
                 password: formData.password
             });
+            // Show success message and redirect to login
+            alert(response.data.message);
             navigate('/login');
         } catch (error) {
-            setError('Failed to reset password. The token may be invalid or expired.');
+            setError(error.response?.data?.error || 'Failed to reset password. The token may be invalid or expired.');
         } finally {
             setLoading(false);
         }

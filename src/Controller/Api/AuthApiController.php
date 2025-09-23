@@ -129,6 +129,65 @@ class AuthApiController extends AbstractController
         }
     }
 
+    #[Route('/forgot-password', name: 'app_api_forgot_password', methods: ['POST'])]
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        
+        if (!$data || !isset($data['email'])) {
+            return new JsonResponse(['error' => 'Email is required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $email = $data['email'];
+        
+        try {
+            $success = $this->userService->generateResetToken($email);
+            
+            if ($success) {
+                // User found and email sent successfully
+                return new JsonResponse([
+                    'message' => 'If an account with that email exists, a password reset link has been sent.'
+                ]);
+            } else {
+                // User not found, but still return success message for security
+                return new JsonResponse([
+                    'message' => 'If an account with that email exists, a password reset link has been sent.'
+                ]);
+            }
+        } catch (\Exception $e) {
+            // Log the actual error for debugging
+            error_log('Password reset error: ' . $e->getMessage());
+            
+            // Still return success message for security
+            return new JsonResponse([
+                'message' => 'If an account with that email exists, a password reset link has been sent.'
+            ]);
+        }
+    }
+
+    #[Route('/reset-password', name: 'app_api_reset_password', methods: ['POST'])]
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        
+        if (!$data || !isset($data['token']) || !isset($data['password'])) {
+            return new JsonResponse(['error' => 'Token and password are required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $token = $data['token'];
+        $password = $data['password'];
+        
+        try {
+            if ($this->userService->resetPassword($token, $password)) {
+                return new JsonResponse(['message' => 'Password reset successful! You can now log in.']);
+            } else {
+                return new JsonResponse(['error' => 'Invalid or expired reset token.'], Response::HTTP_BAD_REQUEST);
+            }
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Password reset failed: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     #[Route('/logout', name: 'app_api_logout', methods: ['POST'])]
     public function logout(Request $request): JsonResponse
     {

@@ -91,6 +91,7 @@ class UserService
         $user = $this->findByEmail($email);
         
         if (!$user) {
+            error_log("Password reset requested for non-existent email: {$email}");
             return false;
         }
 
@@ -102,10 +103,17 @@ class UserService
 
         $this->userRepository->save($user, true);
 
-        // Send reset email
-        $this->emailService->sendPasswordResetEmail($user, $token);
-
-        return true;
+        try {
+            // Send reset email
+            $this->emailService->sendPasswordResetEmail($user, $token);
+            error_log("Password reset email sent successfully to: {$email}");
+            return true;
+        } catch (\Exception $e) {
+            error_log("Failed to send password reset email to {$email}: " . $e->getMessage());
+            // Still return true since token was generated and saved
+            // The user can try again if needed
+            return true;
+        }
     }
 
     public function resetPassword(string $token, string $newPassword): bool

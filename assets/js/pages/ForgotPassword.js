@@ -15,10 +15,10 @@ const ForgotPassword = () => {
         setMessage('');
 
         try {
-            await axios.post('/forgot-password', { email });
-            setMessage('If an account with that email exists, a password reset link has been sent.');
+            const response = await axios.post('/api/forgot-password', { email });
+            setMessage(response.data.message);
         } catch (error) {
-            setError('Failed to send reset email. Please try again.');
+            setError(error.response?.data?.error || 'Failed to send reset email. Please try again.');
         } finally {
             setLoading(false);
         }

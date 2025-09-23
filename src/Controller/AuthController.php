@@ -51,64 +51,9 @@ class AuthController extends AbstractController
         return $this->redirect('/');
     }
 
-    #[Route('/forgot-password', name: 'app_forgot_password')]
-    public function forgotPassword(Request $request): Response
-    {
-        if ($this->getUser()) {
-            return $this->redirect('/');
-        }
+    // Removed forgot-password route - now handled by React app
+    // The React app will make API calls to handle forgot password functionality
 
-        $email = '';
-        $message = '';
-
-        if ($request->isMethod('POST')) {
-            $email = $request->request->get('email', '');
-            
-            if ($this->userService->generateResetToken($email)) {
-                $message = 'If an account with that email exists, a password reset link has been sent.';
-            } else {
-                $message = 'If an account with that email exists, a password reset link has been sent.';
-            }
-        }
-
-        return $this->render('auth/forgot_password.html.twig', [
-            'email' => $email,
-            'message' => $message,
-        ]);
-    }
-
-    #[Route('/reset-password/{token}', name: 'app_reset_password')]
-    public function resetPassword(string $token, Request $request): Response
-    {
-        if ($this->getUser()) {
-            return $this->redirect('/');
-        }
-
-        $message = '';
-        $error = '';
-
-        if ($request->isMethod('POST')) {
-            $password = $request->request->get('password', '');
-            $confirmPassword = $request->request->get('confirmPassword', '');
-
-            if ($password !== $confirmPassword) {
-                $error = 'Passwords do not match.';
-            } elseif (strlen($password) < 8) {
-                $error = 'Password must be at least 8 characters long.';
-            } else {
-                if ($this->userService->resetPassword($token, $password)) {
-                    $message = 'Password reset successful! You can now log in.';
-                    return $this->redirect('/');
-                } else {
-                    $error = 'Invalid or expired reset token.';
-                }
-            }
-        }
-
-        return $this->render('auth/reset_password.html.twig', [
-            'token' => $token,
-            'message' => $message,
-            'error' => $error,
-        ]);
-    }
+    // Removed reset-password route - now handled by React app
+    // The React app will make API calls to handle password reset functionality
 }
