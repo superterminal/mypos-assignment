@@ -23,22 +23,15 @@ class AuthController extends AbstractController
     ) {
     }
 
-    #[Route('/login', name: 'app_login')]
+    #[Route('/login', name: 'app_login', methods: ['GET'])]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_home');
+            return $this->redirect('/');
         }
 
-        // get the login error if there is one
-        $error = $authenticationUtils->getLastAuthenticationError();
-        // last username entered by the user
-        $lastUsername = $authenticationUtils->getLastUsername();
-
-        return $this->render('auth/login.html.twig', [
-            'last_username' => $lastUsername,
-            'error' => $error,
-        ]);
+        // Redirect to React app
+        return $this->redirect('/');
     }
 
     #[Route('/logout', name: 'app_logout')]
@@ -51,55 +44,18 @@ class AuthController extends AbstractController
     public function register(Request $request): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_home');
+            return $this->redirect('/');
         }
 
-        $dto = new UserRegistrationDTO();
-        $errors = [];
-
-        if ($request->isMethod('POST')) {
-            $dto->email = $request->request->get('email', '');
-            $dto->password = $request->request->get('password', '');
-            $dto->firstName = $request->request->get('firstName', '');
-            $dto->lastName = $request->request->get('lastName', '');
-            $dto->role = $request->request->get('role', 'buyer');
-
-            $violations = $this->validator->validate($dto);
-            if (count($violations) === 0) {
-                try {
-                    $user = $this->userService->register($dto);
-                    $this->addFlash('success', 'Registration successful! You can now log in.');
-                    $this->emailService->sendWelcomeEmail($user);
-                    return $this->redirectToRoute('app_login');
-                } catch (\Exception $e) {
-                    $this->addFlash('error', 'Registration failed: ' . $e->getMessage());
-                    
-                    // Log the exception using LoggerService
-                    $this->logger->logException($e, 'Registration failed');
-                    $this->logger->error('Registration attempt failed', [
-                        'email' => $dto->email,
-                        'role' => $dto->role,
-                        'error' => $e->getMessage()
-                    ]);
-                }
-            } else {
-                foreach ($violations as $violation) {
-                    $errors[] = $violation->getMessage();
-                }
-            }
-        }
-
-        return $this->render('auth/register.html.twig', [
-            'dto' => $dto,
-            'errors' => $errors,
-        ]);
+        // Redirect to React app
+        return $this->redirect('/');
     }
 
     #[Route('/forgot-password', name: 'app_forgot_password')]
     public function forgotPassword(Request $request): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_home');
+            return $this->redirect('/');
         }
 
         $email = '';
@@ -125,7 +81,7 @@ class AuthController extends AbstractController
     public function resetPassword(string $token, Request $request): Response
     {
         if ($this->getUser()) {
-            return $this->redirectToRoute('app_home');
+            return $this->redirect('/');
         }
 
         $message = '';
@@ -142,7 +98,7 @@ class AuthController extends AbstractController
             } else {
                 if ($this->userService->resetPassword($token, $password)) {
                     $message = 'Password reset successful! You can now log in.';
-                    return $this->redirectToRoute('app_login');
+                    return $this->redirect('/');
                 } else {
                     $error = 'Invalid or expired reset token.';
                 }

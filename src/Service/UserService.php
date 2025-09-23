@@ -29,7 +29,7 @@ class UserService
         $user->setPassword($hashedPassword);
         
         // Set role
-        $role = $dto->role === 'merchant' ? User::ROLE_MERCHANT : User::ROLE_BUYER;
+        $role = ($dto->userType === 'merchant' || $dto->role === 'merchant') ? User::ROLE_MERCHANT : User::ROLE_BUYER;
         $user->setRoles([$role]);
 
         // Ensure createdAt is set (should be set in constructor, but let's be explicit)
@@ -40,6 +40,31 @@ class UserService
         $this->userRepository->save($user, true);
 
         return $user;
+    }
+
+    public function authenticateUser(string $email, string $password): ?User
+    {
+        $user = $this->userRepository->findOneBy(['email' => $email]);
+        
+        if (!$user) {
+            return null;
+        }
+        
+        if (!$this->passwordHasher->isPasswordValid($user, $password)) {
+            return null;
+        }
+        
+        return $user;
+    }
+
+    public function registerUser(UserRegistrationDTO $dto): User
+    {
+        return $this->register($dto);
+    }
+
+    public function findUserByEmail(string $email): ?User
+    {
+        return $this->findByEmail($email);
     }
 
     public function findByEmail(string $email): ?User

@@ -210,4 +210,9 @@ class VehicleService
         
         return $vehicleIds;
     }
+
+    public function getVehicleRepository(): VehicleRepository
+    {
+        return $this->vehicleRepository;
+    }
 }

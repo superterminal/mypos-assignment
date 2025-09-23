@@ -19,12 +19,19 @@ class UserRegistrationDTO
     public string $password = '';
 
     #[Assert\NotBlank]
+    #[Assert\EqualTo(propertyPath: 'password', message: 'Passwords do not match')]
+    public string $confirmPassword = '';
+
+    #[Assert\NotBlank]
     #[Assert\Length(min: 2, max: 255)]
     public string $firstName = '';
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 2, max: 255)]
     public string $lastName = '';
+
+    #[Assert\Choice(choices: ['merchant', 'buyer'])]
+    public string $userType = 'buyer';
 
     #[Assert\Choice(choices: ['merchant', 'buyer'])]
     public string $role = 'buyer';

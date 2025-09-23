@@ -65,7 +65,7 @@ class VehicleRepository extends ServiceEntityRepository
     private function applyFilters(QueryBuilder $qb, array $filters): void
     {
         if (!empty($filters['type'])) {
-            $qb->andWhere('v INSTANCE OF :type')
+            $qb->andWhere('v.type = :type')
                 ->setParameter('type', $filters['type']);
         }
 
@@ -181,6 +181,33 @@ class VehicleRepository extends ServiceEntityRepository
         } catch (\Exception $e) {
             // Return empty array if database is empty or not accessible
             return [];
+        }
+    }
+
+    /**
+     * @return Vehicle[] Returns an array of Vehicle objects with valid merchants
+     */
+    public function findAllWithValidMerchants(): array
+    {
+        try {
+            return $this->createQueryBuilder('v')
+                ->leftJoin('v.merchant', 'm')
+                ->where('m.id IS NOT NULL')
+                ->orderBy('v.createdAt', 'DESC')
+                ->getQuery()
+                ->getResult();
+        } catch (\Exception $e) {
+            // If there's an error, try to get vehicles without the merchant join
+            // This handles cases where there might be orphaned vehicle records
+            try {
+                return $this->createQueryBuilder('v')
+                    ->orderBy('v.createdAt', 'DESC')
+                    ->getQuery()
+                    ->getResult();
+            } catch (\Exception $e2) {
+                // If all else fails, return empty array
+                return [];
+            }
         }
     }
 }

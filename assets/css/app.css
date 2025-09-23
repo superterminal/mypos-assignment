@@ -1,0 +1,126 @@
+/* Custom styles for the React app */
+
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 80px 0;
+    margin-bottom: 60px;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100vw;
+    max-width: none;
+}
+
+.hero-section .container {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.feature-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.how-it-works {
+    background-color: #f8f9fa;
+    padding: 60px 0;
+}
+
+.stats-section {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    padding: 60px 0;
+}
+
+.cta-section {
+    background-color: #343a40;
+    color: white;
+    padding: 60px 0;
+}
+
+/* Loading spinner */
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Card hover effects */
+.card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Button styles */
+.btn {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Form styles */
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Alert styles */
+.alert {
+    border: none;
+    border-radius: 8px;
+}
+
+/* Pagination styles */
+.pagination .page-link {
+    border-radius: 6px;
+    margin: 0 2px;
+    border: 1px solid #dee2e6;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+/* Vehicle card styles */
+.vehicle-card {
+    height: 100%;
+}
+
+.vehicle-card .card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.vehicle-card .card-footer {
+    margin-top: auto;
+}
+
+/* Filter sidebar */
+.filter-sidebar {
+    position: sticky;
+    top: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 40px 0;
+        margin-bottom: 40px;
+    }
+    
+    .feature-icon {
+        font-size: 2rem;
+    }
+    
+    .how-it-works,
+    .stats-section,
+    .cta-section {
+        padding: 40px 0;
+    }
+}
