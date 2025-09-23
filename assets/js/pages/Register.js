@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { observer } from 'mobx-react-lite';
+import { useAuthStore } from '../stores/RootStore';
 
-const Register = ({ onLogin }) => {
+const Register = observer(() => {
+    const authStore = useAuthStore();
+    const navigate = useNavigate();
+    
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -11,9 +15,6 @@ const Register = ({ onLogin }) => {
         lastName: '',
         userType: 'buyer'
     });
-    const [errors, setErrors] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({
@@ -24,33 +25,18 @@ const Register = ({ onLogin }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setErrors([]);
+        authStore.clearError();
 
-        try {
-            const response = await axios.post('/api/register', formData, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-
+        const result = await authStore.register(formData);
+        
+        if (result.success) {
             // Registration successful - redirect to login page
             navigate('/login', { 
                 state: { 
                     message: 'Registration successful! Please log in to continue.',
-                    email: response.data.email 
+                    email: result.data.email 
                 } 
             });
-        } catch (error) {
-            if (error.response?.data?.errors) {
-                setErrors(error.response.data.errors);
-            } else if (error.response?.data?.message) {
-                setErrors([error.response.data.message]);
-            } else {
-                setErrors(['Registration failed. Please try again.']);
-            }
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -63,12 +49,15 @@ const Register = ({ onLogin }) => {
                             <h3 className="text-center">Register</h3>
                         </div>
                         <div className="card-body">
-                            {errors.length > 0 && (
+                            {authStore.error && (
                                 <div className="alert alert-danger">
                                     <ul className="mb-0">
-                                        {errors.map((error, index) => (
-                                            <li key={index}>{error}</li>
-                                        ))}
+                                        {Array.isArray(authStore.error) ? 
+                                            authStore.error.map((error, index) => (
+                                                <li key={index}>{error}</li>
+                                            )) : 
+                                            <li>{authStore.error}</li>
+                                        }
                                     </ul>
                                 </div>
                             )}
@@ -155,9 +144,9 @@ const Register = ({ onLogin }) => {
                                     <button 
                                         type="submit" 
                                         className="btn btn-primary"
-                                        disabled={loading}
+                                        disabled={authStore.isLoading}
                                     >
-                                        {loading ? (
+                                        {authStore.isLoading ? (
                                             <>
                                                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                             </>
@@ -177,6 +166,6 @@ const Register = ({ onLogin }) => {
             </div>
         </div>
     );
-};
+});
 
 export default Register;

@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { observer } from 'mobx-react-lite';
+import { useAuthStore } from '../stores/RootStore';
 
-const Home = ({ user }) => {
+const Home = observer(() => {
+    const authStore = useAuthStore();
     return (
         <div>
             {/* Hero Section */}
@@ -15,12 +18,12 @@ const Home = ({ user }) => {
                                 Find your dream vehicle or sell your inventory with ease.
                             </p>
                             <div className="d-flex gap-3">
-                                {user ? (
+                                {authStore.isAuthenticated ? (
                                     <>
                                         <Link to="/vehicles" className="btn btn-light btn-lg">
                                             <i className="bi bi-search"></i> Browse Vehicles
                                         </Link>
-                                        {user.isMerchant && (
+                                        {authStore.isMerchant && (
                                             <Link to="/merchant/vehicles" className="btn btn-outline-light btn-lg">
                                                 <i className="bi bi-truck"></i> My Vehicles
                                             </Link>
@@ -230,7 +233,7 @@ const Home = ({ user }) => {
                     <p className="lead mb-4">
                         Join thousands of users who trust myPOS Car Market! for their vehicle needs.
                     </p>
-                    {!user ? (
+                    {!authStore.isAuthenticated ? (
                         <>
                             <Link to="/register" className="btn btn-primary btn-lg me-3">
                                 <i className="bi bi-person-plus"></i> Create Account
@@ -244,7 +247,7 @@ const Home = ({ user }) => {
                             <Link to="/vehicles" className="btn btn-primary btn-lg me-3">
                                 <i className="bi bi-search"></i> Browse Vehicles
                             </Link>
-                            {user.isMerchant && (
+                            {authStore.isMerchant && (
                                 <Link to="/merchant/vehicles" className="btn btn-outline-light btn-lg">
                                     <i className="bi bi-plus-circle"></i> Add Vehicle
                                 </Link>
@@ -255,6 +258,6 @@ const Home = ({ user }) => {
             </div>
         </div>
     );
-};
+});
 
 export default Home;

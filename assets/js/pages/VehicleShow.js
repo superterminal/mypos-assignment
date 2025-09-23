@@ -1,48 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import { observer } from 'mobx-react-lite';
+import { useAuthStore, useVehicleStore } from '../stores/RootStore';
+import { formatPrice } from '../utils/formatUtils';
 
-const VehicleShow = ({ user }) => {
+const VehicleShow = observer(() => {
     const { id } = useParams();
-    const [vehicle, setVehicle] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const authStore = useAuthStore();
+    const vehicleStore = useVehicleStore();
 
     useEffect(() => {
-        loadVehicle();
-    }, [id]);
-
-    const loadVehicle = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get(`/api/vehicles/${id}`);
-            setVehicle(response.data);
-        } catch (error) {
-            setError('Vehicle not found');
-        } finally {
-            setLoading(false);
-        }
-    };
+        vehicleStore.fetchVehicle(id);
+    }, [id, vehicleStore]);
 
     const handleFollow = async () => {
-        try {
-            await axios.post(`/api/vehicles/${id}/follow`);
-            loadVehicle(); // Reload to update follow status
-        } catch (error) {
-            console.error('Error following vehicle:', error);
+        const result = await vehicleStore.followVehicle(id);
+        if (result.success) {
+            // Optionally show success message
         }
     };
 
     const handleUnfollow = async () => {
-        try {
-            await axios.delete(`/api/vehicles/${id}/follow`);
-            loadVehicle(); // Reload to update follow status
-        } catch (error) {
-            console.error('Error unfollowing vehicle:', error);
+        const result = await vehicleStore.unfollowVehicle(id);
+        if (result.success) {
+            // Optionally show success message
         }
     };
 
-    if (loading) {
+    if (vehicleStore.isLoading) {
         return (
             <div className="d-flex justify-content-center">
                 <div className="spinner-border" role="status">
@@ -52,7 +37,7 @@ const VehicleShow = ({ user }) => {
         );
     }
 
-    if (error || !vehicle) {
+    if (vehicleStore.error || !vehicleStore.currentVehicle) {
         return (
             <div className="alert alert-danger">
                 <h4>Vehicle not found</h4>
@@ -61,6 +46,8 @@ const VehicleShow = ({ user }) => {
             </div>
         );
     }
+
+    const vehicle = vehicleStore.currentVehicle;
 
     return (
         <div className="container">
@@ -80,7 +67,7 @@ const VehicleShow = ({ user }) => {
                                 <strong>Brand:</strong> {vehicle.brand}<br />
                                 <strong>Model:</strong> {vehicle.model}<br />
                                 <strong>Colour:</strong> {vehicle.colour}<br />
-                                <strong>Price:</strong> ${parseFloat(vehicle.price).toFixed(2)}<br />
+                                <strong>Price:</strong> ${formatPrice(vehicle.price)}<br />
                                 <strong>Quantity:</strong> {vehicle.quantity}
                             </p>
                             
@@ -120,7 +107,7 @@ const VehicleShow = ({ user }) => {
                                 <strong>Email:</strong> {vehicle.merchant.email}
                             </p>
                             
-                            {user?.isBuyer && (
+                            {authStore.isBuyer && (
                                 <div className="d-grid">
                                     {vehicle.isFollowed ? (
                                         <button className="btn btn-outline-danger" onClick={handleUnfollow}>
@@ -134,10 +121,10 @@ const VehicleShow = ({ user }) => {
                                 </div>
                             )}
                             
-                            {user?.isMerchant && user.id === vehicle.merchant.id && (
+                            {authStore.isMerchant && authStore.user?.id === vehicle.merchant.id && (
                                 <div className="d-grid gap-2">
                                     <Link to={`/merchant/vehicle/${vehicle.id}/edit`} className="btn btn-warning">
-                                        Edit Vehicle
+                                        <i className="bi bi-pencil"></i> Edit Vehicle
                                     </Link>
                                 </div>
                             )}
@@ -147,6 +134,6 @@ const VehicleShow = ({ user }) => {
             </div>
         </div>
     );
-};
+});
 
 export default VehicleShow;

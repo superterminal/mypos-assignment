@@ -23,19 +23,12 @@ class ErrorController extends AbstractController
             ]);
         }
 
-        // Determine which template to use based on status code
-        $template = match ($statusCode) {
-            404 => 'bundles/TwigBundle/Exception/error404.html.twig',
-            default => 'bundles/TwigBundle/Exception/error.html.twig'
-        };
-
-        return new Response(
-            $twig->render($template, [
-                'status_code' => $statusCode,
-                'status_text' => $exception->getStatusText(),
-                'exception' => $exception,
-            ]),
-            $statusCode
-        );
+        // For React app, always serve the React app and let React Router handle the error
+        // This ensures all errors are handled by React instead of Twig templates
+        return $this->render('react_app.html.twig', [
+            'status_code' => $statusCode,
+            'status_text' => $exception->getStatusText(),
+            'exception' => $exception,
+        ], null, $statusCode);
     }
 }

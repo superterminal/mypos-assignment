@@ -1,21 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { observer } from 'mobx-react-lite';
+import { useAuthStore } from '../stores/RootStore';
 
-const Navbar = ({ user, onLogout }) => {
+const Navbar = observer(({ onLogout }) => {
+    const authStore = useAuthStore();
+
     const handleLogout = async () => {
-        try {
-            await fetch('/api/logout', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                credentials: 'include',
-            });
+        await authStore.logout();
+        if (onLogout) {
             onLogout();
-        } catch (error) {
-            console.error('Logout error:', error);
-            onLogout(); // Still logout locally even if server request fails
         }
     };
 
@@ -40,16 +34,16 @@ const Navbar = ({ user, onLogout }) => {
                                 Vehicles
                             </Link>
                         </li>
-                        {user && (
+                        {authStore.isAuthenticated && (
                             <>
-                                {user.isMerchant && (
+                                {authStore.isMerchant && (
                                     <li className="nav-item">
                                         <Link className="nav-link" to="/merchant/vehicles">
                                             My Vehicles
                                         </Link>
                                     </li>
                                 )}
-                                {user.isBuyer && (
+                                {authStore.isBuyer && (
                                     <li className="nav-item">
                                         <Link className="nav-link" to="/buyer/followed">
                                             Followed
@@ -60,7 +54,7 @@ const Navbar = ({ user, onLogout }) => {
                         )}
                     </ul>
                     <ul className="navbar-nav">
-                        {user ? (
+                        {authStore.isAuthenticated ? (
                             <li className="nav-item dropdown">
                                 <a 
                                     className="nav-link dropdown-toggle" 
@@ -68,9 +62,20 @@ const Navbar = ({ user, onLogout }) => {
                                     role="button" 
                                     data-bs-toggle="dropdown"
                                 >
-                                    {user.fullName}
+                                    {authStore.userFullName}
+                                    <span className="badge bg-secondary ms-2">
+                                        {authStore.isMerchant ? 'Merchant' : 'Buyer'}
+                                    </span>
                                 </a>
                                 <ul className="dropdown-menu">
+                                    <li>
+                                        <div className="dropdown-item-text">
+                                            <small className="text-muted">
+                                                Logged in as: <strong>{authStore.isMerchant ? 'Merchant' : 'Buyer'}</strong>
+                                            </small>
+                                        </div>
+                                    </li>
+                                    <li><hr className="dropdown-divider" /></li>
                                     <li>
                                         <button 
                                             className="dropdown-item" 
@@ -100,6 +105,6 @@ const Navbar = ({ user, onLogout }) => {
             </div>
         </nav>
     );
-};
+});
 
 export default Navbar;

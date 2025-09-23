@@ -1,37 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { observer } from 'mobx-react-lite';
+import { useVehicleStore } from '../stores/RootStore';
+import { formatPrice } from '../utils/formatUtils';
 
-const FollowedVehicles = ({ user }) => {
-    const [vehicles, setVehicles] = useState([]);
-    const [loading, setLoading] = useState(true);
+const FollowedVehicles = observer(() => {
+    const vehicleStore = useVehicleStore();
 
     useEffect(() => {
-        loadVehicles();
-    }, []);
-
-    const loadVehicles = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get('/api/buyer/followed-vehicles');
-            setVehicles(response.data.vehicles || []);
-        } catch (error) {
-            console.error('Error loading followed vehicles:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        vehicleStore.fetchFollowedVehicles();
+    }, [vehicleStore]);
 
     const handleUnfollow = async (vehicleId) => {
-        try {
-            await axios.delete(`/api/vehicles/${vehicleId}/follow`);
-            loadVehicles(); // Reload the list
-        } catch (error) {
-            console.error('Error unfollowing vehicle:', error);
+        const result = await vehicleStore.unfollowVehicle(vehicleId);
+        if (result.success) {
+            // Optionally show success message
         }
     };
 
-    if (loading) {
+    if (vehicleStore.isLoading) {
         return (
             <div className="d-flex justify-content-center">
                 <div className="spinner-border" role="status">
@@ -50,9 +37,9 @@ const FollowedVehicles = ({ user }) => {
                 </Link>
             </div>
 
-            {vehicles.length > 0 ? (
+            {vehicleStore.followedVehicles.length > 0 ? (
                 <div className="row">
-                    {vehicles.map(vehicle => (
+                    {vehicleStore.followedVehicles.map(vehicle => (
                         <div key={vehicle.id} className="col-md-6 col-lg-4 mb-4">
                             <div className="card h-100 vehicle-card">
                                 <div className="card-body">
@@ -62,7 +49,7 @@ const FollowedVehicles = ({ user }) => {
                                         <strong>Brand:</strong> {vehicle.brand}<br />
                                         <strong>Model:</strong> {vehicle.model}<br />
                                         <strong>Colour:</strong> {vehicle.colour}<br />
-                                        <strong>Price:</strong> ${parseFloat(vehicle.price).toFixed(2)}<br />
+                                        <strong>Price:</strong> ${formatPrice(vehicle.price)}<br />
                                         <strong>Quantity:</strong> {vehicle.quantity}
                                     </p>
                                 </div>
@@ -90,6 +77,6 @@ const FollowedVehicles = ({ user }) => {
             )}
         </div>
     );
-};
+});
 
 export default FollowedVehicles;

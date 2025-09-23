@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
+import { observer } from 'mobx-react-lite';
+import { useAuthStore, useUIStore } from '../stores/RootStore';
 
-const Login = ({ onLogin }) => {
+const Login = observer(() => {
     const location = useLocation();
+    const authStore = useAuthStore();
+    const uiStore = useUIStore();
+    const navigate = useNavigate();
+    
     const [formData, setFormData] = useState({
         email: location.state?.email || '',
         password: ''
     });
-    const [error, setError] = useState('');
     const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
-    const [loading, setLoading] = useState(false);
-    const navigate = useNavigate();
 
     // Clear success message after 5 seconds
     useEffect(() => {
@@ -32,28 +34,12 @@ const Login = ({ onLogin }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError('');
+        authStore.clearError();
 
-        try {
-            const response = await axios.post('/api/login', formData, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            // If login successful, get user data
-            const userResponse = await axios.get('/api/user/me');
-            onLogin(userResponse.data);
+        const result = await authStore.login(formData.email, formData.password);
+        
+        if (result.success) {
             navigate('/');
-        } catch (error) {
-            if (error.response?.data?.message) {
-                setError(error.response.data.message);
-            } else {
-                setError('Login failed. Please check your credentials.');
-            }
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -69,8 +55,8 @@ const Login = ({ onLogin }) => {
                             {successMessage && (
                                 <div className="alert alert-success">{successMessage}</div>
                             )}
-                            {error && (
-                                <div className="alert alert-danger">{error}</div>
+                            {authStore.error && (
+                                <div className="alert alert-danger">{authStore.error}</div>
                             )}
 
                             <form onSubmit={handleSubmit}>
@@ -103,9 +89,9 @@ const Login = ({ onLogin }) => {
                                     <button 
                                         type="submit" 
                                         className="btn btn-primary"
-                                        disabled={loading}
+                                        disabled={authStore.isLoading}
                                     >
-                                        {loading ? (
+                                        {authStore.isLoading ? (
                                             <>
                                                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                             </>
@@ -126,6 +112,6 @@ const Login = ({ onLogin }) => {
             </div>
         </div>
     );
-};
+});
 
 export default Login;

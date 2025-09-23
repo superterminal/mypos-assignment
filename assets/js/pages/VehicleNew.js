@@ -1,8 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { observer } from 'mobx-react-lite';
+import { useVehicleStore } from '../stores/RootStore';
+import { formatNumberWithCommas, parseFormattedNumber } from '../utils/formatUtils';
 
-const VehicleNew = ({ user }) => {
+const VehicleNew = observer(() => {
+    const vehicleStore = useVehicleStore();
+    const navigate = useNavigate();
+    
     const [formData, setFormData] = useState({
         type: '',
         brand: '',
@@ -17,58 +22,57 @@ const VehicleNew = ({ user }) => {
         loadCapacityKg: '',
         axles: ''
     });
-    const [errors, setErrors] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [carData, setCarData] = useState([]);
     const [brandSuggestions, setBrandSuggestions] = useState([]);
     const [modelSuggestions, setModelSuggestions] = useState([]);
     const [showBrandSuggestions, setShowBrandSuggestions] = useState(false);
     const [showModelSuggestions, setShowModelSuggestions] = useState(false);
-    const navigate = useNavigate();
 
     // Fetch car data on component mount
     useEffect(() => {
-        const fetchCarData = async () => {
-            try {
-                const response = await axios.get('/api/car-data');
-                setCarData(response.data);
-            } catch (error) {
-                console.error('Failed to fetch car data:', error);
-            }
-        };
-        fetchCarData();
-    }, []);
+        vehicleStore.fetchCarData();
+    }, [vehicleStore]);
 
     // Memoized brand suggestions
     const filteredBrands = useMemo(() => {
-        if (formData.type !== 'car' || !formData.brand || formData.brand.length < 1) {
+        if (formData.type !== 'car' || !formData.brand || formData.brand.length < 1 || !vehicleStore.carData) {
             return [];
         }
         
         const query = formData.brand.toLowerCase();
-        return carData
+        return vehicleStore.carData
             .map(car => car.brand)
             .filter(brand => brand.toLowerCase().includes(query))
             .slice(0, 10);
-    }, [carData, formData.brand, formData.type]);
+    }, [vehicleStore.carData, formData.brand, formData.type]);
 
     // Memoized model suggestions
     const filteredModels = useMemo(() => {
-        if (formData.type !== 'car' || !formData.model || formData.model.length < 1 || !formData.brand) {
+        if (formData.type !== 'car' || !formData.model || formData.model.length < 1 || !formData.brand || !vehicleStore.carData) {
             return [];
         }
         
-        const brandData = carData.find(car => car.brand === formData.brand);
+        const brandData = vehicleStore.carData.find(car => car.brand === formData.brand);
         if (!brandData) return [];
         
         const query = formData.model.toLowerCase();
         return brandData.models
             .filter(model => model.toLowerCase().includes(query))
             .slice(0, 10);
-    }, [carData, formData.brand, formData.model, formData.type]);
+    }, [vehicleStore.carData, formData.brand, formData.model, formData.type]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        
+        // Special handling for price field
+        if (name === 'price') {
+            const formattedValue = formatNumberWithCommas(value);
+            setFormData({
+                ...formData,
+                [name]: formattedValue
+            });
+            return;
+        }
+        
         setFormData({
             ...formData,
             [name]: value
@@ -103,20 +107,17 @@ const VehicleNew = ({ user }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setErrors([]);
-
-        try {
-            await axios.post('/api/vehicles', formData);
+        
+        // Parse the formatted price back to numeric value
+        const submitData = {
+            ...formData,
+            price: parseFormattedNumber(formData.price)
+        };
+        
+        const result = await vehicleStore.createVehicle(submitData);
+        
+        if (result.success) {
             navigate('/merchant/vehicles');
-        } catch (error) {
-            if (error.response?.data?.errors) {
-                setErrors(error.response.data.errors);
-            } else {
-                setErrors(['Failed to create vehicle. Please try again.']);
-            }
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -129,13 +130,16 @@ const VehicleNew = ({ user }) => {
                             <h3>Add New Vehicle</h3>
                         </div>
                         <div className="card-body">
-                            {errors.length > 0 && (
+                            {vehicleStore.error && (
                                 <div className="alert alert-danger">
                                     <h6>Please fix the following errors:</h6>
                                     <ul className="mb-0">
-                                        {errors.map((error, index) => (
-                                            <li key={index}>{error}</li>
-                                        ))}
+                                        {Array.isArray(vehicleStore.error) ? 
+                                            vehicleStore.error.map((error, index) => (
+                                                <li key={index}>{error}</li>
+                                            )) : 
+                                            <li>{vehicleStore.error}</li>
+                                        }
                                     </ul>
                                 </div>
                             )}
@@ -263,14 +267,13 @@ const VehicleNew = ({ user }) => {
                                         <div className="mb-3">
                                             <label htmlFor="price" className="form-label">Price ($)</label>
                                             <input
-                                                type="number"
+                                                type="text"
                                                 name="price"
                                                 id="price"
                                                 className="form-control"
                                                 value={formData.price}
                                                 onChange={handleChange}
-                                                step="0.01"
-                                                min="0"
+                                                placeholder="0.00"
                                                 required
                                             />
                                         </div>
@@ -384,8 +387,8 @@ const VehicleNew = ({ user }) => {
                                     <button type="button" className="btn btn-secondary" onClick={() => navigate('/merchant/vehicles')}>
                                         Cancel
                                     </button>
-                                    <button type="submit" className="btn btn-primary" disabled={loading}>
-                                        {loading ? (
+                                    <button type="submit" className="btn btn-primary" disabled={vehicleStore.isLoading}>
+                                        {vehicleStore.isLoading ? (
                                             <>
                                                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                             </>
@@ -401,6 +404,6 @@ const VehicleNew = ({ user }) => {
             </div>
         </div>
     );
-};
+});
 
 export default VehicleNew;

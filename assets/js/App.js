@@ -1,9 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import { observer } from 'mobx-react-lite';
 import axios from 'axios';
+
+// Import MobX configuration
+import { configureMobX, configureMobXDev } from './stores/MobXConfig';
+
+// Import stores
+import rootStore, { useAuthStore, useUIStore } from './stores/RootStore';
+import StoreProvider from './components/StoreProvider';
+
+// Configure MobX
+configureMobX();
+configureMobXDev();
 
 // Import components
 import Navbar from './components/Navbar';
+import MobXErrorBoundary from './components/MobXErrorBoundary';
+import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -15,6 +29,7 @@ import MerchantVehicles from './pages/MerchantVehicles';
 import FollowedVehicles from './pages/FollowedVehicles';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import NotFound from './pages/NotFound';
 
 // Configure axios defaults
 axios.defaults.baseURL = window.location.origin;
@@ -27,64 +42,24 @@ if (csrfToken) {
     axios.defaults.headers.common['X-CSRF-Token'] = csrfToken;
 }
 
-function AppContent() {
-    const [user, setUser] = useState(window.userData || null);
-    const [loading, setLoading] = useState(false);
-    const [flashMessages, setFlashMessages] = useState([]);
+const AppContent = observer(() => {
+    const authStore = useAuthStore();
+    const uiStore = useUIStore();
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Display flash messages from server
-        displayFlashMessages();
-        
-        // If no user data from server, check API
-        if (!window.userData) {
-            checkAuth();
+        // Check authentication if not already authenticated
+        if (!authStore.isAuthenticated) {
+            authStore.checkAuth();
         }
-    }, []);
+    }, [authStore]);
 
-    const displayFlashMessages = () => {
-        const flashContainer = document.getElementById('flash-messages');
-        if (flashContainer && flashContainer.children.length > 0) {
-            const messages = Array.from(flashContainer.children).map(el => ({
-                type: el.classList.contains('alert-danger') ? 'error' : 
-                      el.classList.contains('alert-success') ? 'success' : 
-                      el.classList.contains('alert-warning') ? 'warning' : 'info',
-                message: el.textContent.trim()
-            }));
-            setFlashMessages(messages);
-            
-            // Auto-hide messages after 5 seconds
-            setTimeout(() => {
-                setFlashMessages([]);
-            }, 5000);
-        }
-    };
-
-    const checkAuth = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get('/api/user/me');
-            setUser(response.data);
-        } catch (error) {
-            console.log('Auth check failed:', error.response?.status, error.response?.data);
-            setUser(null);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleLogin = (userData) => {
-        setUser(userData);
-    };
-
-    const handleLogout = () => {
-        setUser(null);
-        // Use React Router navigation instead of full page refresh
+    const handleLogout = async () => {
+        await authStore.logout();
         navigate('/');
     };
 
-    if (loading) {
+    if (authStore.isLoading) {
         return (
             <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
                 <div className="spinner-border" role="status">
@@ -96,18 +71,18 @@ function AppContent() {
 
     return (
         <div className="App">
-            <Navbar user={user} onLogout={handleLogout} />
+            <Navbar onLogout={handleLogout} />
             
             {/* Flash Messages */}
-            {flashMessages.length > 0 && (
+            {uiStore.hasFlashMessages && (
                 <div className="container mt-4">
-                    {flashMessages.map((msg, index) => (
-                        <div key={index} className={`alert alert-${msg.type === 'error' ? 'danger' : msg.type} alert-dismissible fade show`} role="alert">
+                    {uiStore.flashMessages.map((msg) => (
+                        <div key={msg.id} className={`alert alert-${msg.type === 'error' ? 'danger' : msg.type} alert-dismissible fade show`} role="alert">
                             {msg.message}
                             <button 
                                 type="button" 
                                 className="btn-close" 
-                                onClick={() => setFlashMessages(flashMessages.filter((_, i) => i !== index))}
+                                onClick={() => uiStore.removeFlashMessage(msg.id)}
                             ></button>
                         </div>
                     ))}
@@ -116,40 +91,65 @@ function AppContent() {
             
             <main className="container mt-4">
                 <Routes>
-                    <Route path="/" element={<Home user={user} />} />
-                    <Route path="/login" element={<Login onLogin={handleLogin} />} />
-                    <Route path="/register" element={<Register onLogin={handleLogin} />} />
-                    <Route path="/vehicles" element={<VehicleList user={user} />} />
-                    <Route path="/vehicle/:id" element={<VehicleShow user={user} />} />
+                    <Route path="/" element={<Home />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<Register />} />
+                    <Route path="/vehicles" element={<VehicleList />} />
+                    <Route path="/vehicle/:id" element={<VehicleShow />} />
                     <Route 
                         path="/merchant/vehicle/new" 
-                        element={user?.isMerchant ? <VehicleNew user={user} /> : <Navigate to="/login" />} 
+                        element={
+                            <ProtectedRoute requiredRole="merchant">
+                                <VehicleNew />
+                            </ProtectedRoute>
+                        } 
                     />
                     <Route 
                         path="/merchant/vehicle/:id/edit" 
-                        element={user?.isMerchant ? <VehicleEdit user={user} /> : <Navigate to="/login" />} 
+                        element={
+                            <ProtectedRoute requiredRole="merchant">
+                                <VehicleEdit />
+                            </ProtectedRoute>
+                        } 
                     />
                     <Route 
                         path="/merchant/vehicles" 
-                        element={user?.isMerchant ? <MerchantVehicles user={user} /> : <Navigate to="/login" />} 
+                        element={
+                            <ProtectedRoute requiredRole="merchant">
+                                <MerchantVehicles />
+                            </ProtectedRoute>
+                        } 
                     />
                     <Route 
                         path="/buyer/followed" 
-                        element={user?.isBuyer ? <FollowedVehicles user={user} /> : <Navigate to="/login" />} 
+                        element={
+                            <ProtectedRoute requiredRole="buyer">
+                                <FollowedVehicles />
+                            </ProtectedRoute>
+                        } 
                     />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
                     <Route path="/reset-password/:token" element={<ResetPassword />} />
+                    {/* Catch-all route for 404 pages */}
+                    <Route path="*" element={<NotFound />} />
                 </Routes>
             </main>
         </div>
     );
-}
+});
 
 function App() {
+    // Make rootStore available globally for debugging
+    window.rootStore = rootStore;
+    
     return (
-        <Router>
-            <AppContent />
-        </Router>
+        <MobXErrorBoundary>
+            <StoreProvider>
+                <Router>
+                    <AppContent />
+                </Router>
+            </StoreProvider>
+        </MobXErrorBoundary>
     );
 }
 

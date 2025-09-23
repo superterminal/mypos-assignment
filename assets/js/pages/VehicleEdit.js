@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { observer } from 'mobx-react-lite';
+import { useAuthStore, useVehicleStore } from '../stores/RootStore';
+import { formatNumberWithCommas, parseFormattedNumber } from '../utils/formatUtils';
 
-const VehicleEdit = ({ user }) => {
+const VehicleEdit = observer(() => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [vehicle, setVehicle] = useState(null);
+    const authStore = useAuthStore();
+    const vehicleStore = useVehicleStore();
+    
     const [formData, setFormData] = useState({
         brand: '',
         model: '',
@@ -19,42 +23,25 @@ const VehicleEdit = ({ user }) => {
         loadCapacityKg: '',
         axles: ''
     });
-    const [errors, setErrors] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [carData, setCarData] = useState([]);
     const [showBrandSuggestions, setShowBrandSuggestions] = useState(false);
     const [showModelSuggestions, setShowModelSuggestions] = useState(false);
 
     useEffect(() => {
         loadVehicle();
-    }, [id]);
-
-    // Fetch car data on component mount
-    useEffect(() => {
-        const fetchCarData = async () => {
-            try {
-                const response = await axios.get('/api/car-data');
-                setCarData(response.data);
-            } catch (error) {
-                console.error('Failed to fetch car data:', error);
-            }
-        };
-        fetchCarData();
-    }, []);
+        vehicleStore.fetchCarData();
+    }, [id, vehicleStore]);
 
     const loadVehicle = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get(`/api/vehicles/${id}`);
-            const vehicleData = response.data;
-            setVehicle(vehicleData);
-            
+        await vehicleStore.fetchVehicle(id);
+        
+        if (vehicleStore.currentVehicle) {
+            const vehicleData = vehicleStore.currentVehicle;
             // Populate form with vehicle data
             setFormData({
                 brand: vehicleData.brand || '',
                 model: vehicleData.model || '',
                 colour: vehicleData.colour || '',
-                price: vehicleData.price || '',
+                price: vehicleData.price ? formatNumberWithCommas(vehicleData.price.toString()) : '',
                 quantity: vehicleData.quantity || 0,
                 engineCapacity: vehicleData.engineCapacity || '',
                 doors: vehicleData.doors || '',
@@ -63,43 +50,50 @@ const VehicleEdit = ({ user }) => {
                 loadCapacityKg: vehicleData.loadCapacityKg || '',
                 axles: vehicleData.axles || ''
             });
-        } catch (error) {
-            setErrors(['Vehicle not found']);
-        } finally {
-            setLoading(false);
         }
     };
 
     // Memoized brand suggestions
     const filteredBrands = useMemo(() => {
-        if (vehicle?.type !== 'car' || !formData.brand || formData.brand.length < 1) {
+        if (vehicleStore.currentVehicle?.type !== 'car' || !formData.brand || formData.brand.length < 1 || !vehicleStore.carData) {
             return [];
         }
         
         const query = formData.brand.toLowerCase();
-        return carData
+        return vehicleStore.carData
             .map(car => car.brand)
             .filter(brand => brand.toLowerCase().includes(query))
             .slice(0, 10);
-    }, [carData, formData.brand, vehicle?.type]);
+    }, [vehicleStore.carData, formData.brand, vehicleStore.currentVehicle?.type]);
 
     // Memoized model suggestions
     const filteredModels = useMemo(() => {
-        if (vehicle?.type !== 'car' || !formData.model || formData.model.length < 1 || !formData.brand) {
+        if (vehicleStore.currentVehicle?.type !== 'car' || !formData.model || formData.model.length < 1 || !formData.brand || !vehicleStore.carData) {
             return [];
         }
         
-        const brandData = carData.find(car => car.brand === formData.brand);
+        const brandData = vehicleStore.carData.find(car => car.brand === formData.brand);
         if (!brandData) return [];
         
         const query = formData.model.toLowerCase();
         return brandData.models
             .filter(model => model.toLowerCase().includes(query))
             .slice(0, 10);
-    }, [carData, formData.brand, formData.model, vehicle?.type]);
+    }, [vehicleStore.carData, formData.brand, formData.model, vehicleStore.currentVehicle?.type]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
+        
+        // Special handling for price field
+        if (name === 'price') {
+            const formattedValue = formatNumberWithCommas(value);
+            setFormData({
+                ...formData,
+                [name]: formattedValue
+            });
+            return;
+        }
+        
         setFormData({
             ...formData,
             [name]: value
@@ -134,24 +128,21 @@ const VehicleEdit = ({ user }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setErrors([]);
-
-        try {
-            await axios.put(`/api/vehicles/${id}`, formData);
+        
+        // Parse the formatted price back to numeric value
+        const submitData = {
+            ...formData,
+            price: parseFormattedNumber(formData.price)
+        };
+        
+        const result = await vehicleStore.updateVehicle(id, submitData);
+        
+        if (result.success) {
             navigate('/merchant/vehicles');
-        } catch (error) {
-            if (error.response?.data?.errors) {
-                setErrors(error.response.data.errors);
-            } else {
-                setErrors(['Failed to update vehicle. Please try again.']);
-            }
-        } finally {
-            setLoading(false);
         }
     };
 
-    if (loading && !vehicle) {
+    if (vehicleStore.isLoading && !vehicleStore.currentVehicle) {
         return (
             <div className="d-flex justify-content-center">
                 <div className="spinner-border" role="status">
@@ -161,7 +152,7 @@ const VehicleEdit = ({ user }) => {
         );
     }
 
-    if (errors.length > 0 && !vehicle) {
+    if (vehicleStore.error && !vehicleStore.currentVehicle) {
         return (
             <div className="alert alert-danger">
                 <h4>Vehicle not found</h4>
@@ -176,16 +167,19 @@ const VehicleEdit = ({ user }) => {
                 <div className="col-md-8">
                     <div className="card">
                         <div className="card-header">
-                            <h3>Edit Vehicle - {vehicle?.displayName}</h3>
+                            <h3>Edit Vehicle - {vehicleStore.currentVehicle?.displayName}</h3>
                         </div>
                         <div className="card-body">
-                            {errors.length > 0 && (
+                            {vehicleStore.error && (
                                 <div className="alert alert-danger">
                                     <h6>Please fix the following errors:</h6>
                                     <ul className="mb-0">
-                                        {errors.map((error, index) => (
-                                            <li key={index}>{error}</li>
-                                        ))}
+                                        {Array.isArray(vehicleStore.error) ? 
+                                            vehicleStore.error.map((error, index) => (
+                                                <li key={index}>{error}</li>
+                                            )) : 
+                                            <li>{vehicleStore.error}</li>
+                                        }
                                     </ul>
                                 </div>
                             )}
@@ -203,11 +197,11 @@ const VehicleEdit = ({ user }) => {
                                                     className="form-control"
                                                     value={formData.brand}
                                                     onChange={handleChange}
-                                                    onFocus={() => vehicle?.type === 'car' && setShowBrandSuggestions(true)}
+                                                    onFocus={() => vehicleStore.currentVehicle?.type === 'car' && setShowBrandSuggestions(true)}
                                                     onBlur={() => setTimeout(() => setShowBrandSuggestions(false), 200)}
                                                     required
                                                 />
-                                                {vehicle?.type === 'car' && showBrandSuggestions && filteredBrands.length > 0 && (
+                                                {vehicleStore.currentVehicle?.type === 'car' && showBrandSuggestions && filteredBrands.length > 0 && (
                                                     <div className="list-group position-absolute w-100" style={{ zIndex: 1000, top: '100%' }}>
                                                         {filteredBrands.map((brand, index) => (
                                                             <button
@@ -235,11 +229,11 @@ const VehicleEdit = ({ user }) => {
                                                     className="form-control"
                                                     value={formData.model}
                                                     onChange={handleChange}
-                                                    onFocus={() => vehicle?.type === 'car' && formData.brand && setShowModelSuggestions(true)}
+                                                    onFocus={() => vehicleStore.currentVehicle?.type === 'car' && formData.brand && setShowModelSuggestions(true)}
                                                     onBlur={() => setTimeout(() => setShowModelSuggestions(false), 200)}
                                                     required
                                                 />
-                                                {vehicle?.type === 'car' && showModelSuggestions && filteredModels.length > 0 && (
+                                                {vehicleStore.currentVehicle?.type === 'car' && showModelSuggestions && filteredModels.length > 0 && (
                                                     <div className="list-group position-absolute w-100" style={{ zIndex: 1000, top: '100%' }}>
                                                         {filteredModels.map((model, index) => (
                                                             <button
@@ -295,14 +289,13 @@ const VehicleEdit = ({ user }) => {
                                         <div className="mb-3">
                                             <label htmlFor="price" className="form-label">Price ($)</label>
                                             <input
-                                                type="number"
+                                                type="text"
                                                 name="price"
                                                 id="price"
                                                 className="form-control"
                                                 value={formData.price}
                                                 onChange={handleChange}
-                                                step="0.01"
-                                                min="0"
+                                                placeholder="0.00"
                                                 required
                                             />
                                         </div>
@@ -325,7 +318,7 @@ const VehicleEdit = ({ user }) => {
                                 </div>
 
                                 {/* Car-specific fields */}
-                                {vehicle?.type === 'car' && (
+                                {vehicleStore.currentVehicle?.type === 'car' && (
                                     <div className="row">
                                         <div className="col-md-6">
                                             <div className="mb-3">
@@ -362,7 +355,7 @@ const VehicleEdit = ({ user }) => {
                                 )}
 
                                 {/* Truck-specific fields */}
-                                {vehicle?.type === 'truck' && (
+                                {vehicleStore.currentVehicle?.type === 'truck' && (
                                     <div className="mb-3">
                                         <label htmlFor="beds" className="form-label">Beds</label>
                                         <input
@@ -378,7 +371,7 @@ const VehicleEdit = ({ user }) => {
                                 )}
 
                                 {/* Trailer-specific fields */}
-                                {vehicle?.type === 'trailer' && (
+                                {vehicleStore.currentVehicle?.type === 'trailer' && (
                                     <div className="row">
                                         <div className="col-md-6">
                                             <div className="mb-3">
@@ -416,8 +409,8 @@ const VehicleEdit = ({ user }) => {
                                     <button type="button" className="btn btn-secondary" onClick={() => navigate('/merchant/vehicles')}>
                                         Cancel
                                     </button>
-                                    <button type="submit" className="btn btn-primary" disabled={loading}>
-                                        {loading ? (
+                                    <button type="submit" className="btn btn-primary" disabled={vehicleStore.isLoading}>
+                                        {vehicleStore.isLoading ? (
                                             <>
                                                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                             </>
@@ -433,6 +426,6 @@ const VehicleEdit = ({ user }) => {
             </div>
         </div>
     );
-};
+});
 
 export default VehicleEdit;

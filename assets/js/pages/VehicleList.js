@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { observer } from 'mobx-react-lite';
+import { useAuthStore, useVehicleStore } from '../stores/RootStore';
+import { formatPrice, formatNumberWithCommas, parseFormattedNumber } from '../utils/formatUtils';
 
-const VehicleList = ({ user }) => {
-    const [allVehicles, setAllVehicles] = useState([]);
-    const [filterOptions, setFilterOptions] = useState({
-        types: [],
-        brands: [],
-        colours: []
-    });
+const VehicleList = observer(() => {
+    const authStore = useAuthStore();
+    const vehicleStore = useVehicleStore();
+    
     const [filters, setFilters] = useState({
         type: '',
         brand: '',
@@ -22,37 +21,15 @@ const VehicleList = ({ user }) => {
         totalPages: 1,
         total: 0
     });
-    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        loadVehicles();
-        loadFilterOptions();
-    }, []);
-
-    const loadVehicles = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get('/api/vehicles');
-            setAllVehicles(response.data.vehicles);
-        } catch (error) {
-            console.error('Error loading vehicles:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const loadFilterOptions = async () => {
-        try {
-            const response = await axios.get('/api/vehicles/filter-options');
-            setFilterOptions(response.data);
-        } catch (error) {
-            console.error('Error loading filter options:', error);
-        }
-    };
+        vehicleStore.fetchVehicles();
+        vehicleStore.fetchFilterOptions();
+    }, [vehicleStore]);
 
     // Client-side filtering logic
     const filteredVehicles = useMemo(() => {
-        return allVehicles.filter(vehicle => {
+        return vehicleStore.vehicles.filter(vehicle => {
             // Type filter
             if (filters.type && vehicle.type !== filters.type) {
                 return false;
@@ -75,16 +52,46 @@ const VehicleList = ({ user }) => {
 
             // Price range filter
             const price = parseFloat(vehicle.price);
-            if (filters.priceMin && price < parseFloat(filters.priceMin)) {
+            if (filters.priceMin && price < parseFloat(parseFormattedNumber(filters.priceMin))) {
                 return false;
             }
-            if (filters.priceMax && price > parseFloat(filters.priceMax)) {
+            if (filters.priceMax && price > parseFloat(parseFormattedNumber(filters.priceMax))) {
                 return false;
             }
 
             return true;
         });
-    }, [allVehicles, filters]);
+    }, [vehicleStore.vehicles, filters]);
+
+    // Get brands available for the selected type
+    const availableBrands = useMemo(() => {
+        if (!filters.type) {
+            // If no type is selected, show all brands
+            return vehicleStore.filterOptions?.brands || [];
+        }
+        
+        // Filter vehicles by selected type and get unique brands
+        const vehiclesOfType = vehicleStore.vehicles.filter(vehicle => vehicle.type === filters.type);
+        const brands = [...new Set(vehiclesOfType.map(vehicle => vehicle.brand))];
+        return brands.sort();
+    }, [filters.type, vehicleStore.vehicles, vehicleStore.filterOptions?.brands]);
+
+    // Get colours available for the selected type and brand
+    const availableColours = useMemo(() => {
+        if (!filters.type) {
+            // If no type is selected, show all colours
+            return vehicleStore.filterOptions?.colours || [];
+        }
+        
+        let filteredVehicles = vehicleStore.vehicles.filter(vehicle => vehicle.type === filters.type);
+        
+        if (filters.brand) {
+            filteredVehicles = filteredVehicles.filter(vehicle => vehicle.brand === filters.brand);
+        }
+        
+        const colours = [...new Set(filteredVehicles.map(vehicle => vehicle.colour))];
+        return colours.sort();
+    }, [filters.type, filters.brand, vehicleStore.vehicles, vehicleStore.filterOptions?.colours]);
 
     // Client-side pagination
     const vehiclesPerPage = 12;
@@ -96,7 +103,7 @@ const VehicleList = ({ user }) => {
 
     // Update pagination when filters change
     useEffect(() => {
-        if (allVehicles.length > 0) {
+        if (vehicleStore.vehicles.length > 0) {
             setPagination(prev => ({
                 ...prev,
                 page: 1,
@@ -104,13 +111,40 @@ const VehicleList = ({ user }) => {
                 total: filteredVehicles.length
             }));
         }
-    }, [filteredVehicles.length, allVehicles.length]);
+    }, [filteredVehicles.length, vehicleStore.vehicles.length]);
 
     const handleFilterChange = (e) => {
-        setFilters({
-            ...filters,
-            [e.target.name]: e.target.value
-        });
+        const { name, value } = e.target;
+        
+        if (name === 'type') {
+            // When type changes, clear brand and colour filters
+            setFilters({
+                ...filters,
+                type: value,
+                brand: '',
+                colour: ''
+            });
+        } else if (name === 'brand') {
+            // When brand changes, clear colour filter
+            setFilters({
+                ...filters,
+                brand: value,
+                colour: ''
+            });
+        } else if (name === 'priceMin' || name === 'priceMax') {
+            // Special handling for price fields
+            const formattedValue = formatNumberWithCommas(value);
+            setFilters({
+                ...filters,
+                [name]: formattedValue
+            });
+        } else {
+            // For other filters, just update the specific field
+            setFilters({
+                ...filters,
+                [name]: value
+            });
+        }
     };
 
     const clearFilters = () => {
@@ -125,15 +159,13 @@ const VehicleList = ({ user }) => {
     };
 
     const handleFollow = async (vehicleId) => {
-        try {
-            await axios.post(`/api/vehicles/${vehicleId}/follow`);
-            loadVehicles(); // Reload to update follow status
-        } catch (error) {
-            console.error('Error following vehicle:', error);
+        const result = await vehicleStore.followVehicle(vehicleId);
+        if (result.success) {
+            // Optionally show success message
         }
     };
 
-    if (loading) {
+    if (vehicleStore.isLoading) {
         return (
             <div className="d-flex justify-content-center">
                 <div className="spinner-border" role="status">
@@ -163,7 +195,7 @@ const VehicleList = ({ user }) => {
                                         onChange={handleFilterChange}
                                     >
                                         <option value="">All Types</option>
-                                        {filterOptions.types.map(type => (
+                                        {vehicleStore.filterOptions?.types?.map(type => (
                                             <option key={type} value={type}>
                                                 {type.charAt(0).toUpperCase() + type.slice(1)}
                                             </option>
@@ -172,16 +204,21 @@ const VehicleList = ({ user }) => {
                                 </div>
 
                                 <div className="mb-3">
-                                    <label htmlFor="brand" className="form-label">Brand</label>
+                                    <label htmlFor="brand" className="form-label">
+                                        Brand {filters.type && `(${availableBrands.length} available)`}
+                                    </label>
                                     <select
                                         name="brand"
                                         id="brand"
                                         className="form-select"
                                         value={filters.brand}
                                         onChange={handleFilterChange}
+                                        disabled={!filters.type}
                                     >
-                                        <option value="">All Brands</option>
-                                        {filterOptions.brands.map(brand => (
+                                        <option value="">
+                                            {filters.type ? `All ${filters.type} Brands` : 'Select Type First'}
+                                        </option>
+                                        {availableBrands.map(brand => (
                                             <option key={brand} value={brand}>{brand}</option>
                                         ))}
                                     </select>
@@ -200,16 +237,21 @@ const VehicleList = ({ user }) => {
                                 </div>
 
                                 <div className="mb-3">
-                                    <label htmlFor="colour" className="form-label">Colour</label>
+                                    <label htmlFor="colour" className="form-label">
+                                        Colour {filters.type && `(${availableColours.length} available)`}
+                                    </label>
                                     <select
                                         name="colour"
                                         id="colour"
                                         className="form-select"
                                         value={filters.colour}
                                         onChange={handleFilterChange}
+                                        disabled={!filters.type}
                                     >
-                                        <option value="">All Colours</option>
-                                        {filterOptions.colours.map(colour => (
+                                        <option value="">
+                                            {filters.type ? `All ${filters.type} Colours` : 'Select Type First'}
+                                        </option>
+                                        {availableColours.map(colour => (
                                             <option key={colour} value={colour}>{colour}</option>
                                         ))}
                                     </select>
@@ -218,26 +260,26 @@ const VehicleList = ({ user }) => {
                                 <div className="mb-3">
                                     <label htmlFor="priceMin" className="form-label">Min Price</label>
                                     <input
-                                        type="number"
+                                        type="text"
                                         name="priceMin"
                                         id="priceMin"
                                         className="form-control"
                                         value={filters.priceMin}
                                         onChange={handleFilterChange}
-                                        step="0.01"
+                                        placeholder="0.00"
                                     />
                                 </div>
 
                                 <div className="mb-3">
                                     <label htmlFor="priceMax" className="form-label">Max Price</label>
                                     <input
-                                        type="number"
+                                        type="text"
                                         name="priceMax"
                                         id="priceMax"
                                         className="form-control"
                                         value={filters.priceMax}
                                         onChange={handleFilterChange}
-                                        step="0.01"
+                                        placeholder="0.00"
                                     />
                                 </div>
 
@@ -254,7 +296,7 @@ const VehicleList = ({ user }) => {
                 <div className="col-md-9">
                     <div className="d-flex justify-content-between align-items-center mb-3">
                         <h2>Vehicles ({pagination?.total || filteredVehicles.length} found)</h2>
-                        {user?.isMerchant && (
+                        {authStore.isMerchant && (
                             <Link to="/merchant/vehicle/new" className="btn btn-success">
                                 Add Vehicle
                             </Link>
@@ -268,13 +310,21 @@ const VehicleList = ({ user }) => {
                                     <div key={vehicle.id} className="col-md-6 col-lg-4 mb-4">
                                         <div className="card h-100 vehicle-card">
                                             <div className="card-body">
-                                                <h5 className="card-title">{vehicle.displayName}</h5>
+                                                <h5 className="card-title d-flex justify-content-between align-items-center">
+                                                    {vehicle.displayName}
+                                                    {authStore.isMerchant && vehicle.merchant?.id === authStore.userId && (
+                                                        <span className="badge bg-success">
+                                                            <i className="bi bi-person-check me-1"></i>
+                                                            My Listing
+                                                        </span>
+                                                    )}
+                                                </h5>
                                                 <p className="card-text">
                                                     <strong>Type:</strong> {vehicle.type}<br />
                                                     <strong>Brand:</strong> {vehicle.brand}<br />
                                                     <strong>Model:</strong> {vehicle.model}<br />
                                                     <strong>Colour:</strong> {vehicle.colour}<br />
-                                                    <strong>Price:</strong> ${parseFloat(vehicle.price).toFixed(2)}<br />
+                                                    <strong>Price:</strong> ${formatPrice(vehicle.price)}<br />
                                                     <strong>Quantity:</strong> {vehicle.quantity}
                                                 </p>
                                             </div>
@@ -282,7 +332,7 @@ const VehicleList = ({ user }) => {
                                                 <Link to={`/vehicle/${vehicle.id}`} className="btn btn-primary">
                                                     View Details
                                                 </Link>
-                                                {user?.isBuyer && (
+                                                {authStore.isBuyer && (
                                                     <button
                                                         type="button"
                                                         className={`btn ${vehicle.isFollowed ? 'btn-success' : 'btn-secondary'}`}
@@ -349,6 +399,6 @@ const VehicleList = ({ user }) => {
             </div>
         </div>
     );
-};
+});
 
 export default VehicleList;

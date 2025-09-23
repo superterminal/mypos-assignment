@@ -48,8 +48,9 @@ security:
         - { path: ^/api/register, roles: PUBLIC_ACCESS }
         - { path: ^/api/logout, roles: PUBLIC_ACCESS }
         - { path: ^/api/user/me, roles: ROLE_USER }
-        - { path: ^/merchant, roles: ROLE_MERCHANT }
-        - { path: ^/buyer, roles: ROLE_BUYER }
+        # Allow React routes to be accessed by any authenticated user - React will handle role-based permission checking
+        - { path: ^/merchant, roles: ROLE_USER }
+        - { path: ^/buyer, roles: ROLE_USER }
         - { path: ^/admin, roles: ROLE_ADMIN }
 
 when@test:

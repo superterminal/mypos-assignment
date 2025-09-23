@@ -1,39 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { observer } from 'mobx-react-lite';
+import { useVehicleStore } from '../stores/RootStore';
+import { formatPrice } from '../utils/formatUtils';
 
-const MerchantVehicles = ({ user }) => {
-    const [vehicles, setVehicles] = useState([]);
-    const [loading, setLoading] = useState(true);
+const MerchantVehicles = observer(() => {
+    const vehicleStore = useVehicleStore();
 
     useEffect(() => {
-        loadVehicles();
-    }, []);
-
-    const loadVehicles = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get('/api/merchant/vehicles');
-            setVehicles(response.data.vehicles || []);
-        } catch (error) {
-            console.error('Error loading vehicles:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        vehicleStore.fetchMerchantVehicles();
+    }, [vehicleStore]);
 
     const handleDelete = async (vehicleId) => {
         if (window.confirm('Are you sure you want to delete this vehicle?')) {
-            try {
-                await axios.delete(`/api/vehicles/${vehicleId}`);
-                loadVehicles(); // Reload the list
-            } catch (error) {
-                console.error('Error deleting vehicle:', error);
+            const result = await vehicleStore.deleteVehicle(vehicleId);
+            if (result.success) {
+                // Optionally show success message
             }
         }
     };
 
-    if (loading) {
+    if (vehicleStore.isLoading) {
         return (
             <div className="d-flex justify-content-center">
                 <div className="spinner-border" role="status">
@@ -52,9 +39,9 @@ const MerchantVehicles = ({ user }) => {
                 </Link>
             </div>
 
-            {vehicles.length > 0 ? (
+            {vehicleStore.vehicles.length > 0 ? (
                 <div className="row">
-                    {vehicles.map(vehicle => (
+                    {vehicleStore.vehicles.map(vehicle => (
                         <div key={vehicle.id} className="col-md-6 col-lg-4 mb-4">
                             <div className="card h-100 vehicle-card">
                                 <div className="card-body">
@@ -64,7 +51,7 @@ const MerchantVehicles = ({ user }) => {
                                         <strong>Brand:</strong> {vehicle.brand}<br />
                                         <strong>Model:</strong> {vehicle.model}<br />
                                         <strong>Colour:</strong> {vehicle.colour}<br />
-                                        <strong>Price:</strong> ${parseFloat(vehicle.price).toFixed(2)}<br />
+                                        <strong>Price:</strong> ${formatPrice(vehicle.price)}<br />
                                         <strong>Quantity:</strong> {vehicle.quantity}
                                     </p>
                                 </div>
@@ -104,6 +91,6 @@ const MerchantVehicles = ({ user }) => {
             )}
         </div>
     );
-};
+});
 
 export default MerchantVehicles;
