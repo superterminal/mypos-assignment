@@ -12,6 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[Route('/api')]
 class AuthApiController extends AbstractController
@@ -49,12 +50,33 @@ class AuthApiController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         
-        if (!$data || !isset($data['email']) || !isset($data['password'])) {
-            return new JsonResponse(['error' => 'Email and password are required'], Response::HTTP_BAD_REQUEST);
+        if (!$data) {
+            return new JsonResponse(['error' => 'Invalid JSON data'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $email = $data['email'] ?? '';
+        $password = $data['password'] ?? '';
+        
+        // Validate email
+        $emailConstraint = new Assert\Email();
+        $emailConstraint->message = 'Please provide a valid email address';
+        
+        $emailViolations = $this->validator->validate($email, $emailConstraint);
+        if (count($emailViolations) > 0) {
+            return new JsonResponse(['error' => 'Please provide a valid email address'], Response::HTTP_BAD_REQUEST);
+        }
+        
+        // Validate password (not empty)
+        $passwordConstraint = new Assert\NotBlank();
+        $passwordConstraint->message = 'Password is required';
+        
+        $passwordViolations = $this->validator->validate($password, $passwordConstraint);
+        if (count($passwordViolations) > 0) {
+            return new JsonResponse(['error' => 'Password is required'], Response::HTTP_BAD_REQUEST);
         }
 
         try {
-            $user = $this->userService->authenticateUser($data['email'], $data['password']);
+            $user = $this->userService->authenticateUser($email, $password);
             
             if (!$user) {
                 return new JsonResponse(['error' => 'Invalid credentials'], Response::HTTP_UNAUTHORIZED);
@@ -134,11 +156,20 @@ class AuthApiController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         
-        if (!$data || !isset($data['email'])) {
-            return new JsonResponse(['error' => 'Email is required'], Response::HTTP_BAD_REQUEST);
+        if (!$data) {
+            return new JsonResponse(['error' => 'Invalid JSON data'], Response::HTTP_BAD_REQUEST);
         }
 
-        $email = $data['email'];
+        $email = $data['email'] ?? '';
+        
+        // Validate email
+        $emailConstraint = new Assert\Email();
+        $emailConstraint->message = 'Please provide a valid email address';
+        
+        $violations = $this->validator->validate($email, $emailConstraint);
+        if (count($violations) > 0) {
+            return new JsonResponse(['error' => 'Please provide a valid email address'], Response::HTTP_BAD_REQUEST);
+        }
         
         try {
             $success = $this->userService->generateResetToken($email);
@@ -170,12 +201,40 @@ class AuthApiController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
         
-        if (!$data || !isset($data['token']) || !isset($data['password'])) {
-            return new JsonResponse(['error' => 'Token and password are required'], Response::HTTP_BAD_REQUEST);
+        if (!$data) {
+            return new JsonResponse(['error' => 'Invalid JSON data'], Response::HTTP_BAD_REQUEST);
         }
 
-        $token = $data['token'];
-        $password = $data['password'];
+        $token = $data['token'] ?? '';
+        $password = $data['password'] ?? '';
+        
+        // Validate token (not empty)
+        $tokenConstraint = new Assert\NotBlank();
+        $tokenConstraint->message = 'Reset token is required';
+        
+        $tokenViolations = $this->validator->validate($token, $tokenConstraint);
+        if (count($tokenViolations) > 0) {
+            return new JsonResponse(['error' => 'Reset token is required'], Response::HTTP_BAD_REQUEST);
+        }
+        
+        // Validate password (same rules as registration)
+        $passwordConstraints = [
+            new Assert\NotBlank(),
+            new Assert\Length(['min' => 8, 'max' => 255]),
+            new Assert\Regex([
+                'pattern' => '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/',
+                'message' => 'Password must contain at least one lowercase letter, one uppercase letter, and one number'
+            ])
+        ];
+        
+        $passwordViolations = $this->validator->validate($password, $passwordConstraints);
+        if (count($passwordViolations) > 0) {
+            $errors = [];
+            foreach ($passwordViolations as $violation) {
+                $errors[] = $violation->getMessage();
+            }
+            return new JsonResponse(['error' => implode(', ', $errors)], Response::HTTP_BAD_REQUEST);
+        }
         
         try {
             if ($this->userService->resetPassword($token, $password)) {
