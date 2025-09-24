@@ -16,14 +16,16 @@ const VehicleShow = observer(() => {
     const handleFollow = async () => {
         const result = await vehicleStore.followVehicle(id);
         if (result.success) {
-            // Optionally show success message
+            // The store will automatically update the currentVehicle.isFollowed property
+            // and the component will re-render due to MobX reactivity
         }
     };
 
     const handleUnfollow = async () => {
         const result = await vehicleStore.unfollowVehicle(id);
         if (result.success) {
-            // Optionally show success message
+            // The store will automatically update the currentVehicle.isFollowed property
+            // and the component will re-render due to MobX reactivity
         }
     };
 
@@ -48,6 +50,9 @@ const VehicleShow = observer(() => {
     }
 
     const vehicle = vehicleStore.currentVehicle;
+    
+    // Ensure isFollowed property exists with a default value
+    const isFollowed = vehicle?.isFollowed ?? false;
 
     return (
         <div className="container">
@@ -109,7 +114,7 @@ const VehicleShow = observer(() => {
                             
                             {authStore.isBuyer && (
                                 <div className="d-grid">
-                                    {vehicle.isFollowed ? (
+                                    {isFollowed ? (
                                         <button className="btn btn-outline-danger" onClick={handleUnfollow}>
                                             <i className="bi bi-x-circle"></i> Unfollow
                                         </button>

@@ -7,19 +7,19 @@ import { configure } from 'mobx';
 export const configureMobX = () => {
     configure({
         // Enforce actions to be used for state modifications
-        enforceActions: 'always',
+        enforceActions: process.env.NODE_ENV === 'production' ? 'always' : 'never',
         
         // Disable computed value caching in development for easier debugging
-        computedRequiresReaction: process.env.NODE_ENV === 'development',
+        computedRequiresReaction: false,
         
         // Disable observable value change tracking in development
-        observableRequiresReaction: process.env.NODE_ENV === 'development',
+        observableRequiresReaction: false,
         
         // Disable reaction tracking in development
-        reactionRequiresObservable: process.env.NODE_ENV === 'development',
+        reactionRequiresObservable: false,
         
         // Disable action tracking in development
-        actionRequiresObservable: process.env.NODE_ENV === 'development',
+        actionRequiresObservable: false,
         
         // Disable strict mode in production for better performance
         disableErrorBoundaries: process.env.NODE_ENV === 'production',

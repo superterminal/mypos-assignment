@@ -41,7 +41,11 @@ class VehicleStore {
             const response = await axios.get(`/api/vehicles/${id}`);
             
             runInAction(() => {
-                this.currentVehicle = response.data;
+                // Ensure isFollowed property is set
+                this.currentVehicle = {
+                    ...response.data,
+                    isFollowed: response.data.isFollowed ?? false
+                };
                 this.isLoading = false;
             });
         } catch (error) {
@@ -174,13 +178,18 @@ class VehicleStore {
             const response = await axios.post(`/api/vehicles/${id}/follow`);
             
             runInAction(() => {
+                // Convert both IDs to numbers for comparison
+                const currentVehicleId = Number(this.currentVehicle?.id);
+                const targetId = Number(id);
+                
                 // Update the vehicle in the list to mark it as followed
-                const vehicle = this.vehicles.find(v => v.id === id);
+                const vehicle = this.vehicles.find(v => Number(v.id) === targetId);
                 if (vehicle) {
                     vehicle.isFollowed = true;
                 }
-                if (this.currentVehicle?.id === id) {
-                    this.currentVehicle.isFollowed = true;
+                if (currentVehicleId === targetId) {
+                    // Create a new object to ensure MobX reactivity
+                    this.currentVehicle = { ...this.currentVehicle, isFollowed: true };
                 }
             });
 
@@ -200,16 +209,21 @@ class VehicleStore {
             const response = await axios.delete(`/api/vehicles/${id}/follow`);
             
             runInAction(() => {
+                // Convert both IDs to numbers for comparison
+                const currentVehicleId = Number(this.currentVehicle?.id);
+                const targetId = Number(id);
+                
                 // Update the vehicle in the list to mark it as not followed
-                const vehicle = this.vehicles.find(v => v.id === id);
+                const vehicle = this.vehicles.find(v => Number(v.id) === targetId);
                 if (vehicle) {
                     vehicle.isFollowed = false;
                 }
-                if (this.currentVehicle?.id === id) {
-                    this.currentVehicle.isFollowed = false;
+                if (currentVehicleId === targetId) {
+                    // Create a new object to ensure MobX reactivity
+                    this.currentVehicle = { ...this.currentVehicle, isFollowed: false };
                 }
                 // Remove from followed vehicles list
-                this.followedVehicles = this.followedVehicles.filter(v => v.id !== id);
+                this.followedVehicles = this.followedVehicles.filter(v => Number(v.id) !== targetId);
             });
 
             return { success: true, message: response.data.message };
